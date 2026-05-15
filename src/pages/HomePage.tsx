@@ -1,0 +1,242 @@
+import { useState } from 'react';
+import { Property, Page } from '@/App';
+import PropertyCard from '@/components/PropertyCard';
+import Icon from '@/components/ui/icon';
+
+interface HomePageProps {
+  properties: Property[];
+  favorites: number[];
+  compareList: number[];
+  onToggleFavorite: (id: number) => void;
+  onToggleCompare: (id: number) => void;
+  onNavigate: (page: Page) => void;
+}
+
+const STATS = [
+  { value: '1 240+', label: 'Объектов в базе', icon: 'Building2' },
+  { value: '180+', label: 'Готовых бизнесов', icon: 'Briefcase' },
+  { value: '98%', label: 'Успешных сделок', icon: 'TrendingUp' },
+  { value: '12 лет', label: 'На рынке', icon: 'Award' },
+];
+
+const CATEGORIES = [
+  { icon: '🏢', label: 'Офисы', count: 320, type: 'office' },
+  { icon: '🛒', label: 'Торговля', count: 218, type: 'retail' },
+  { icon: '🏭', label: 'Склады', count: 145, type: 'warehouse' },
+  { icon: '🍽️', label: 'Рестораны', count: 89, type: 'restaurant' },
+  { icon: '💼', label: 'Готовый бизнес', count: 183, type: 'business' },
+  { icon: '⚙️', label: 'Производство', count: 74, type: 'production' },
+];
+
+export default function HomePage({ properties, favorites, compareList, onToggleFavorite, onToggleCompare, onNavigate }: HomePageProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const hotProperties = properties.filter(p => p.isHot || p.isNew).slice(0, 3);
+
+  return (
+    <div>
+      {/* Hero */}
+      <section className="hero-bg text-white py-20 md:py-28">
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-sm mb-6 animate-fade-in-up">
+              <span className="w-2 h-2 rounded-full bg-brand-orange animate-pulse" />
+              <span>Интеллектуальный подбор с ИИ</span>
+            </div>
+            <h1 className="font-display font-900 text-4xl md:text-6xl leading-tight mb-5 animate-fade-in-up stagger-1">
+              Коммерческая недвижимость и готовый бизнес
+            </h1>
+            <p className="text-white/75 text-lg md:text-xl mb-8 animate-fade-in-up stagger-2 max-w-xl">
+              Более 1 240 объектов в Москве и Подмосковье. Офисы, склады, торговые площади и работающий бизнес под ключ.
+            </p>
+
+            {/* Search bar */}
+            <div className="flex gap-3 animate-fade-in-up stagger-3">
+              <div className="flex-1 flex items-center gap-3 bg-white/10 border border-white/25 rounded-xl px-4 py-3 backdrop-blur-sm">
+                <Icon name="Search" size={20} className="text-white/60 flex-shrink-0" />
+                <input
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="Район, улица, тип объекта..."
+                  className="bg-transparent text-white placeholder:text-white/50 outline-none w-full text-base"
+                />
+              </div>
+              <button
+                onClick={() => onNavigate('catalog')}
+                className="btn-orange text-white px-6 py-3 rounded-xl font-semibold font-display text-base flex-shrink-0"
+              >
+                Найти
+              </button>
+            </div>
+
+            {/* Quick filters */}
+            <div className="flex flex-wrap gap-2 mt-4 animate-fade-in-up stagger-4">
+              {['Продажа', 'Аренда', 'Готовый бизнес', 'ЦАО', 'до 10 млн ₽'].map(tag => (
+                <button
+                  key={tag}
+                  className="px-3 py-1 rounded-full bg-white/10 border border-white/20 text-sm text-white/80 hover:bg-white/20 transition-all duration-200"
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats */}
+      <section className="bg-white border-b border-border py-6">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {STATS.map((stat, i) => (
+              <div key={stat.label} className={`flex items-center gap-3 animate-fade-in-up stagger-${i + 1}`}>
+                <div className="w-10 h-10 rounded-xl bg-brand-blue/10 flex items-center justify-center flex-shrink-0">
+                  <Icon name={stat.icon} size={20} className="text-brand-blue" />
+                </div>
+                <div>
+                  <div className="font-display font-800 text-2xl text-brand-blue leading-none">{stat.value}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">{stat.label}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Categories */}
+      <section className="py-12 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="flex items-end justify-between mb-8">
+            <div>
+              <div className="text-brand-orange text-sm font-semibold uppercase tracking-widest mb-1">Категории</div>
+              <h2 className="font-display font-800 text-2xl md:text-3xl text-foreground">Выберите тип объекта</h2>
+            </div>
+            <button
+              onClick={() => onNavigate('catalog')}
+              className="hidden md:flex items-center gap-2 text-brand-blue font-semibold text-sm hover:gap-3 transition-all duration-200"
+            >
+              Все объекты <Icon name="ArrowRight" size={16} />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {CATEGORIES.map((cat, i) => (
+              <button
+                key={cat.type}
+                onClick={() => onNavigate('catalog')}
+                className={`group flex flex-col items-center gap-3 p-5 bg-white rounded-2xl border border-border hover:border-brand-blue hover:shadow-md transition-all duration-250 animate-fade-in-up stagger-${i + 1}`}
+              >
+                <span className="text-3xl group-hover:scale-110 transition-transform duration-200">{cat.icon}</span>
+                <div className="text-center">
+                  <div className="font-display font-700 text-sm text-foreground">{cat.label}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">{cat.count} объектов</div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Hot listings */}
+      <section className="py-12 bg-muted/40">
+        <div className="container mx-auto px-4">
+          <div className="flex items-end justify-between mb-8">
+            <div>
+              <div className="text-brand-orange text-sm font-semibold uppercase tracking-widest mb-1">🔥 Горячие предложения</div>
+              <h2 className="font-display font-800 text-2xl md:text-3xl text-foreground">Актуальные объекты</h2>
+            </div>
+            <button
+              onClick={() => onNavigate('catalog')}
+              className="hidden md:flex items-center gap-2 text-brand-blue font-semibold text-sm hover:gap-3 transition-all duration-200"
+            >
+              Смотреть все <Icon name="ArrowRight" size={16} />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {hotProperties.map((property, i) => (
+              <PropertyCard
+                key={property.id}
+                property={property}
+                isFavorite={favorites.includes(property.id)}
+                isCompare={compareList.includes(property.id)}
+                onToggleFavorite={onToggleFavorite}
+                onToggleCompare={onToggleCompare}
+                style={{ animationDelay: `${i * 0.1}s` }}
+              />
+            ))}
+          </div>
+
+          <div className="mt-8 text-center md:hidden">
+            <button
+              onClick={() => onNavigate('catalog')}
+              className="btn-blue text-white px-8 py-3 rounded-xl font-semibold font-display"
+            >
+              Смотреть все объекты
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* AI Banner */}
+      <section className="py-12">
+        <div className="container mx-auto px-4">
+          <div className="bg-gradient-to-r from-brand-blue to-blue-700 rounded-3xl p-8 md:p-12 relative overflow-hidden">
+            <div className="absolute right-0 top-0 w-64 h-64 opacity-10">
+              <div className="w-full h-full rounded-full bg-white blur-3xl" />
+            </div>
+            <div className="relative z-10 max-w-xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 text-white/90 text-sm mb-4">
+                <Icon name="Sparkles" size={14} />
+                ИИ-помощник
+              </div>
+              <h2 className="font-display font-800 text-2xl md:text-4xl text-white mb-4">
+                Подберём объект за 2 минуты
+              </h2>
+              <p className="text-white/75 text-base mb-6">
+                Опишите задачу — ИИ найдёт подходящие варианты, рассчитает окупаемость и подготовит аналитику по рынку.
+              </p>
+              <button className="btn-orange text-white px-6 py-3 rounded-xl font-semibold font-display text-base inline-flex items-center gap-2">
+                <Icon name="Sparkles" size={18} />
+                Спросить ИИ
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-foreground text-white/70 py-10">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row items-start justify-between gap-6">
+            <div>
+              <div className="font-display font-800 text-xl text-white mb-1">BIZNEST</div>
+              <div className="text-sm">Коммерческая недвижимость и готовый бизнес</div>
+            </div>
+            <div className="grid grid-cols-2 gap-8 text-sm">
+              <div>
+                <div className="text-white font-semibold mb-3">Каталог</div>
+                <ul className="space-y-2">
+                  {['Офисы', 'Торговля', 'Склады', 'Рестораны'].map(i => (
+                    <li key={i}><button className="hover:text-white transition-colors">{i}</button></li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <div className="text-white font-semibold mb-3">Компания</div>
+                <ul className="space-y-2">
+                  {['О нас', 'Контакты', 'Оценка бизнеса', 'Партнёрам'].map(i => (
+                    <li key={i}><button className="hover:text-white transition-colors">{i}</button></li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div className="border-t border-white/10 mt-8 pt-6 text-sm">
+            © 2024 BIZNEST. Все права защищены.
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}

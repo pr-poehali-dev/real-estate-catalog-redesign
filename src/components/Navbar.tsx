@@ -1,0 +1,105 @@
+import { Page } from '@/App';
+import Icon from '@/components/ui/icon';
+
+interface NavbarProps {
+  currentPage: Page;
+  setCurrentPage: (page: Page) => void;
+  favoritesCount: number;
+  compareCount: number;
+}
+
+const navItems = [
+  { id: 'home' as Page, label: 'Главная', icon: 'Home' },
+  { id: 'catalog' as Page, label: 'Каталог', icon: 'Building2' },
+  { id: 'map' as Page, label: 'Карта', icon: 'Map' },
+  { id: 'favorites' as Page, label: 'Избранное', icon: 'Heart' },
+];
+
+export default function Navbar({ currentPage, setCurrentPage, favoritesCount, compareCount }: NavbarProps) {
+  return (
+    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-border shadow-sm">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <button
+            onClick={() => setCurrentPage('home')}
+            className="flex items-center gap-2 group"
+          >
+            <div className="w-9 h-9 rounded-lg btn-blue flex items-center justify-center">
+              <Icon name="Building" size={20} className="text-white" />
+            </div>
+            <div className="flex flex-col leading-none">
+              <span className="font-display font-800 text-lg text-brand-blue tracking-tight">BIZNEST</span>
+              <span className="text-[10px] text-muted-foreground font-body tracking-widest uppercase">Недвижимость & Бизнес</span>
+            </div>
+          </button>
+
+          {/* Nav links — desktop */}
+          <nav className="hidden md:flex items-center gap-1">
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setCurrentPage(item.id)}
+                className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                  ${currentPage === item.id
+                    ? 'bg-brand-blue text-white'
+                    : 'text-foreground hover:bg-muted'
+                  }`}
+              >
+                <Icon name={item.icon} size={16} />
+                {item.label}
+                {item.id === 'favorites' && favoritesCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full btn-orange text-white text-[10px] font-bold flex items-center justify-center">
+                    {favoritesCount}
+                  </span>
+                )}
+              </button>
+            ))}
+          </nav>
+
+          {/* Right side */}
+          <div className="flex items-center gap-3">
+            {compareCount > 0 && (
+              <button
+                onClick={() => setCurrentPage('compare')}
+                className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border-2 border-brand-orange text-brand-orange text-sm font-semibold hover:bg-brand-orange hover:text-white transition-all duration-200"
+              >
+                <Icon name="GitCompare" size={15} />
+                Сравнить ({compareCount})
+              </button>
+            )}
+            <button className="btn-orange text-white px-4 py-2 rounded-lg text-sm font-semibold font-display hidden md:block">
+              Подать объявление
+            </button>
+            <button className="md:hidden p-2 rounded-lg hover:bg-muted transition-colors">
+              <Icon name="Menu" size={22} />
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile nav */}
+        <nav className="md:hidden flex items-center gap-1 pb-2 overflow-x-auto">
+          {navItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setCurrentPage(item.id)}
+              className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-200
+                ${currentPage === item.id
+                  ? 'bg-brand-blue text-white'
+                  : 'text-foreground hover:bg-muted'
+                }`}
+            >
+              <Icon name={item.icon} size={14} />
+              {item.label}
+              {item.id === 'favorites' && favoritesCount > 0 && (
+                <span className="w-4 h-4 rounded-full btn-orange text-white text-[9px] font-bold flex items-center justify-center">
+                  {favoritesCount}
+                </span>
+              )}
+            </button>
+          ))}
+        </nav>
+      </div>
+    </header>
+  );
+}
