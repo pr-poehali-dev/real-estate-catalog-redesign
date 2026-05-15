@@ -80,8 +80,30 @@ export default function HomePage({ properties, favorites, compareList, onToggleF
     { value: `с ${settings.company_since_year || 2007}`, label: 'На рынке', icon: 'Award', deal: null },
   ];
 
+  const orgLd = {
+    '@context': 'https://schema.org',
+    '@type': 'RealEstateAgent',
+    name: settings.company_name || 'BIZNEST',
+    description: settings.seo_description || 'Коммерческая недвижимость и готовый бизнес в Краснодаре',
+    foundingDate: String(settings.company_since_year || 2007),
+    address: settings.company_address ? {
+      '@type': 'PostalAddress',
+      streetAddress: settings.company_address,
+      addressLocality: settings.main_city || 'Краснодар',
+      addressCountry: 'RU',
+    } : undefined,
+    telephone: settings.company_phone,
+    email: settings.company_email,
+    image: settings.logo_url,
+    url: settings.site_url,
+  };
+
   return (
     <div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(orgLd) }}
+      />
       {/* Hero */}
       <section className="hero-bg text-white py-20 md:py-28">
         <div className="container mx-auto px-4 relative z-10">

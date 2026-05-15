@@ -5,6 +5,7 @@ import { extractIdFromSlug } from '@/lib/slug';
 import { useSettings } from '@/contexts/SettingsContext';
 import Icon from '@/components/ui/icon';
 import { formatPrice } from '@/components/PropertyCard';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 const TYPE_LABELS: Record<string, string> = {
   office: 'Офис', retail: 'Торговля', warehouse: 'Склад',
@@ -39,19 +40,63 @@ export default function PropertyPage({ onToggleFavorite, onToggleCompare, favori
     fetchListingById(id).then(d => setItem(d)).finally(() => setLoading(false));
   }, [slug]);
 
-  // SEO meta
+  // SEO meta + canonical + Open Graph
   useEffect(() => {
     if (!item) return;
     const title = item.seoTitle || `${item.title} — ${item.city || 'Краснодар'} | ${settings.company_name || 'BIZNEST'}`;
     document.title = title;
     const desc = item.seoDescription || (item.description || '').slice(0, 160);
-    let m = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
-    if (!m) {
-      m = document.createElement('meta');
+
+    const setMeta = (selector: string, create: () => HTMLMetaElement, content: string) => {
+      let el = document.querySelector(selector) as HTMLMetaElement | null;
+      if (!el) {
+        el = create();
+        document.head.appendChild(el);
+      }
+      el.content = content;
+    };
+
+    setMeta('meta[name="description"]', () => {
+      const m = document.createElement('meta');
       m.name = 'description';
-      document.head.appendChild(m);
+      return m;
+    }, desc);
+
+    setMeta('meta[property="og:title"]', () => {
+      const m = document.createElement('meta');
+      m.setAttribute('property', 'og:title');
+      return m;
+    }, title);
+
+    setMeta('meta[property="og:description"]', () => {
+      const m = document.createElement('meta');
+      m.setAttribute('property', 'og:description');
+      return m;
+    }, desc);
+
+    setMeta('meta[property="og:type"]', () => {
+      const m = document.createElement('meta');
+      m.setAttribute('property', 'og:type');
+      return m;
+    }, 'product');
+
+    const mainImage = (item.images && item.images[0]) || item.image;
+    if (mainImage) {
+      setMeta('meta[property="og:image"]', () => {
+        const m = document.createElement('meta');
+        m.setAttribute('property', 'og:image');
+        return m;
+      }, mainImage);
     }
-    m.content = desc;
+
+    // canonical
+    let canon = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+    if (!canon) {
+      canon = document.createElement('link');
+      canon.rel = 'canonical';
+      document.head.appendChild(canon);
+    }
+    canon.href = window.location.origin + window.location.pathname;
   }, [item, settings.company_name]);
 
   if (loading) {
@@ -85,13 +130,47 @@ export default function PropertyPage({ onToggleFavorite, onToggleCompare, favori
     }
   };
 
+  const dealLabel = DEAL_LABELS[item.deal] || item.deal;
+  const typeLabel = TYPE_LABELS[item.type] || item.type;
+  const productLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: item.title,
+    description: (item.description || '').slice(0, 5000),
+    image: imgs,
+    category: typeLabel,
+    offers: {
+      '@type': 'Offer',
+      priceCurrency: 'RUB',
+      price: item.price,
+      availability: 'https://schema.org/InStock',
+      url: typeof window !== 'undefined' ? window.location.href : undefined,
+      seller: {
+        '@type': 'Organization',
+        name: settings.company_name || 'BIZNEST',
+      },
+    },
+  };
+
   return (
     <div className="bg-background">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productLd) }}
+      />
       <div className="container mx-auto px-4 py-6">
-        <button onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4">
-          <Icon name="ArrowLeft" size={16} /> Назад
-        </button>
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <Breadcrumbs items={[
+            { label: 'Главная', to: '/' },
+            { label: 'Каталог', to: '/catalog' },
+            { label: `${typeLabel} · ${dealLabel}`, to: `/catalog?type=${item.type}&deal=${item.deal}` },
+            { label: item.title },
+          ]} />
+          <button onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground whitespace-nowrap">
+            <Icon name="ArrowLeft" size={14} /> Назад
+          </button>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Левая часть: фото + описание */}

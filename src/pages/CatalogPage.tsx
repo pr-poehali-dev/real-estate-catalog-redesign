@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Property } from '@/App';
 import PropertyCard from '@/components/PropertyCard';
 import Icon from '@/components/ui/icon';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 const PAGE_SIZE = 20;
 
@@ -234,6 +235,12 @@ export default function CatalogPage({ properties, favorites, compareList, onTogg
 
       {/* Results */}
       <div className="container mx-auto px-4 py-8">
+        <div className="mb-4">
+          <Breadcrumbs items={[
+            { label: 'Главная', to: '/' },
+            { label: 'Каталог' },
+          ]} />
+        </div>
         <div className="flex items-center justify-between mb-6">
           <div className="text-sm text-muted-foreground">
             Найдено <span className="font-semibold text-foreground">{filtered.length}</span> объектов

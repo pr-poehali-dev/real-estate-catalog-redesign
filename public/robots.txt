@@ -15,3 +15,5 @@ Disallow: /admin
 Disallow: /login
 
 Sitemap: /sitemap.xml
+Sitemap: /sitemap_index.xml
+Sitemap: https://functions.poehali.dev/590f7088-530b-4bfb-994e-1047674672fa?resource=sitemap
