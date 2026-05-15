@@ -1,0 +1,22 @@
+{
+  "tests": [
+    {
+      "name": "Получить все объявления",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Фильтр по категории",
+      "method": "GET",
+      "path": "/?category=office",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Получить одно объявление",
+      "method": "GET",
+      "path": "/?id=1",
+      "expectedStatus": 200
+    }
+  ]
+}

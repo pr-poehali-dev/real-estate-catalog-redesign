@@ -1,0 +1,77 @@
+import type { Property } from '@/App';
+
+const LISTINGS_URL = 'https://functions.poehali.dev/590f7088-530b-4bfb-994e-1047674672fa';
+const LEADS_URL = 'https://functions.poehali.dev/45673fe4-a39d-4193-b529-174d4c8c8f97';
+
+interface ApiListing {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  deal: string;
+  price: number;
+  price_per_m2: number | null;
+  area: number;
+  payback: number | null;
+  profit: number | null;
+  floor: number | null;
+  total_floors: number | null;
+  address: string;
+  district: string;
+  lat: number;
+  lng: number;
+  image: string;
+  tags: string[];
+  is_hot: boolean;
+  is_new: boolean;
+}
+
+function mapListing(item: ApiListing): Property {
+  return {
+    id: item.id,
+    title: item.title,
+    type: item.category as Property['type'],
+    deal: item.deal as Property['deal'],
+    address: item.address,
+    district: item.district,
+    area: item.area,
+    price: item.price,
+    pricePerM2: item.price_per_m2 ?? undefined,
+    payback: item.payback ?? undefined,
+    profit: item.profit ?? undefined,
+    floor: item.floor ?? undefined,
+    totalFloors: item.total_floors ?? undefined,
+    image: item.image,
+    tags: item.tags || [],
+    description: item.description,
+    lat: item.lat,
+    lng: item.lng,
+    isHot: item.is_hot,
+    isNew: item.is_new,
+  };
+}
+
+export async function fetchListings(): Promise<Property[]> {
+  const res = await fetch(LISTINGS_URL);
+  if (!res.ok) throw new Error('Не удалось загрузить объекты');
+  const data = await res.json();
+  return (data.listings || []).map(mapListing);
+}
+
+export interface LeadInput {
+  name: string;
+  phone: string;
+  email?: string;
+  message?: string;
+  listing_id?: number;
+  source?: string;
+}
+
+export async function sendLead(payload: LeadInput): Promise<{ success: boolean; id?: number; error?: string }> {
+  const res = await fetch(LEADS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return res.json();
+}
