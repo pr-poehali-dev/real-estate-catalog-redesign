@@ -1,0 +1,11 @@
+{
+  "tests": [
+    {
+      "name": "Без авторизации",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "describe", "prompt": "тест"},
+      "expectedStatus": 401
+    }
+  ]
+}

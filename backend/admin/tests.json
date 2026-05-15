@@ -1,0 +1,10 @@
+{
+  "tests": [
+    {
+      "name": "Без токена",
+      "method": "GET",
+      "path": "/?resource=listings",
+      "expectedStatus": 401
+    }
+  ]
+}

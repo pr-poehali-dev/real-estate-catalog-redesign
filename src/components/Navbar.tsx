@@ -1,11 +1,14 @@
 import { Page } from '@/App';
 import Icon from '@/components/ui/icon';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface NavbarProps {
   currentPage: Page;
   setCurrentPage: (page: Page) => void;
   favoritesCount: number;
   compareCount: number;
+  onLogin: () => void;
+  onAdmin: () => void;
 }
 
 const navItems = [
@@ -15,7 +18,9 @@ const navItems = [
   { id: 'favorites' as Page, label: 'Избранное', icon: 'Heart' },
 ];
 
-export default function Navbar({ currentPage, setCurrentPage, favoritesCount, compareCount }: NavbarProps) {
+export default function Navbar({ currentPage, setCurrentPage, favoritesCount, compareCount, onLogin, onAdmin }: NavbarProps) {
+  const { user } = useAuth();
+  const isStaff = user && ['admin', 'editor', 'manager'].includes(user.role);
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-border shadow-sm">
       <div className="container mx-auto px-4">
@@ -68,9 +73,23 @@ export default function Navbar({ currentPage, setCurrentPage, favoritesCount, co
                 Сравнить ({compareCount})
               </button>
             )}
-            <button className="btn-orange text-white px-4 py-2 rounded-lg text-sm font-semibold font-display hidden md:block">
-              Подать объявление
-            </button>
+            {isStaff && (
+              <button onClick={onAdmin} className="hidden md:inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border-2 border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white transition">
+                <Icon name="Shield" size={15} />
+                Админка
+              </button>
+            )}
+            {user ? (
+              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted text-sm">
+                <Icon name="User" size={14} />
+                <span className="truncate max-w-[100px]">{user.name}</span>
+              </div>
+            ) : (
+              <button onClick={onLogin} className="hidden md:inline-flex items-center gap-1.5 btn-orange text-white px-4 py-2 rounded-lg text-sm font-semibold font-display">
+                <Icon name="LogIn" size={15} />
+                Войти
+              </button>
+            )}
             <button className="md:hidden p-2 rounded-lg hover:bg-muted transition-colors">
               <Icon name="Menu" size={22} />
             </button>

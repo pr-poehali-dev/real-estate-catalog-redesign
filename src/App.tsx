@@ -4,9 +4,12 @@ import CatalogPage from './pages/CatalogPage';
 import MapPage from './pages/MapPage';
 import FavoritesPage from './pages/FavoritesPage';
 import ComparePage from './pages/ComparePage';
+import LoginPage from './pages/LoginPage';
+import AdminPage from './pages/AdminPage';
 import Navbar from './components/Navbar';
 import CompareBar from './components/CompareBar';
 import { fetchListings } from './lib/api';
+import { useAuth } from './contexts/AuthContext';
 
 export type PropertyType = 'office' | 'retail' | 'warehouse' | 'restaurant' | 'business' | 'production';
 export type DealType = 'sale' | 'rent' | 'business';
@@ -35,8 +38,11 @@ export interface Property {
 }
 
 export type Page = 'home' | 'catalog' | 'map' | 'favorites' | 'compare';
+export type AppView = 'site' | 'login' | 'admin';
 
 export default function App() {
+  const { user, loading: authLoading } = useAuth();
+  const [view, setView] = useState<AppView>('site');
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [favorites, setFavorites] = useState<number[]>([]);
   const [compareList, setCompareList] = useState<number[]>([]);
@@ -75,6 +81,25 @@ export default function App() {
   const compareProperties = properties.filter(p => compareList.includes(p.id));
   const favoriteProperties = properties.filter(p => favorites.includes(p.id));
 
+  if (view === 'login') {
+    return <LoginPage onSuccess={() => setView(user && ['admin', 'editor', 'manager'].includes(user.role) ? 'admin' : 'site')} onBack={() => setView('site')} />;
+  }
+
+  if (view === 'admin') {
+    if (authLoading) {
+      return <div className="min-h-screen flex items-center justify-center">Загрузка...</div>;
+    }
+    if (!user) {
+      setView('login');
+      return null;
+    }
+    if (!['admin', 'editor', 'manager'].includes(user.role)) {
+      setView('site');
+      return null;
+    }
+    return <AdminPage onExit={() => setView('site')} />;
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -111,6 +136,8 @@ export default function App() {
         setCurrentPage={setCurrentPage}
         favoritesCount={favorites.length}
         compareCount={compareList.length}
+        onLogin={() => setView('login')}
+        onAdmin={() => setView('admin')}
       />
 
       <main>

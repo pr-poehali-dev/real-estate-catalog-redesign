@@ -1,0 +1,24 @@
+{
+  "tests": [
+    {
+      "name": "Логин администратором",
+      "method": "POST",
+      "path": "/?action=login",
+      "body": {"email": "admin@biznest.ru", "password": "admin123"},
+      "expectedStatus": 200
+    },
+    {
+      "name": "Неверный пароль",
+      "method": "POST",
+      "path": "/?action=login",
+      "body": {"email": "admin@biznest.ru", "password": "wrong"},
+      "expectedStatus": 401
+    },
+    {
+      "name": "Me без токена",
+      "method": "GET",
+      "path": "/?action=me",
+      "expectedStatus": 401
+    }
+  ]
+}
