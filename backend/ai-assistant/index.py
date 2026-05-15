@@ -1,7 +1,7 @@
 """
-Business: ИИ-ассистент на YandexGPT для админки — генерация описаний объектов, аналитика, ответы на лиды, SEO, помощь по администрированию.
+Business: ИИ-ассистент на DeepSeek для админки — генерация описаний объектов, аналитика, ответы на лиды, SEO, помощь по администрированию.
 Args: event с httpMethod (POST), body {action, prompt, context_data}, headers X-Auth-Token; context
-Returns: HTTP-ответ с текстом от YandexGPT и логом в БД
+Returns: HTTP-ответ с текстом от DeepSeek и логом в БД
 """
 
 import json
@@ -12,7 +12,8 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 
 SCHEMA = 't_p71821556_real_estate_catalog_'
-YANDEX_GPT_URL = 'https://llm.api.cloud.yandex.net/foundationModels/v1/completion'
+DEEPSEEK_URL = 'https://api.deepseek.com/v1/chat/completions'
+DEEPSEEK_MODEL = 'deepseek-chat'
 
 SYSTEM_PROMPTS = {
     'describe': (
@@ -92,37 +93,40 @@ def _get_user(cur, token):
     return cur.fetchone()
 
 
-def _call_yandex(system_prompt: str, user_prompt: str) -> dict:
-    api_key = os.environ.get('YANDEX_API_KEY', '')
-    folder = os.environ.get('YANDEX_FOLDER_ID', '')
-    if not api_key or not folder:
-        return {'error': 'YANDEX_API_KEY или YANDEX_FOLDER_ID не настроены'}
+def _call_deepseek(system_prompt: str, user_prompt: str) -> dict:
+    api_key = os.environ.get('DEEPSEEK_API_KEY', '')
+    if not api_key:
+        return {'error': 'DEEPSEEK_API_KEY не настроен. Добавьте ключ в секреты проекта.'}
 
     payload = {
-        'modelUri': f'gpt://{folder}/yandexgpt-lite/latest',
-        'completionOptions': {'stream': False, 'temperature': 0.6, 'maxTokens': 800},
+        'model': DEEPSEEK_MODEL,
         'messages': [
-            {'role': 'system', 'text': system_prompt},
-            {'role': 'user', 'text': user_prompt},
+            {'role': 'system', 'content': system_prompt},
+            {'role': 'user', 'content': user_prompt},
         ],
+        'temperature': 0.6,
+        'max_tokens': 800,
+        'stream': False,
     }
 
     req = urllib.request.Request(
-        YANDEX_GPT_URL,
+        DEEPSEEK_URL,
         data=json.dumps(payload).encode('utf-8'),
         headers={
-            'Authorization': f'Api-Key {api_key}',
+            'Authorization': f'Bearer {api_key}',
             'Content-Type': 'application/json',
-            'x-folder-id': folder,
         },
         method='POST',
     )
     try:
-        with urllib.request.urlopen(req, timeout=25) as resp:
+        with urllib.request.urlopen(req, timeout=60) as resp:
             data = json.loads(resp.read().decode('utf-8'))
-        text = data.get('result', {}).get('alternatives', [{}])[0].get('message', {}).get('text', '')
-        usage = data.get('result', {}).get('usage', {})
-        return {'text': text.strip(), 'tokens': int(usage.get('totalTokens', 0))}
+        choices = data.get('choices') or []
+        text = ''
+        if choices:
+            text = (choices[0].get('message') or {}).get('content', '') or ''
+        usage = data.get('usage') or {}
+        return {'text': text.strip(), 'tokens': int(usage.get('total_tokens', 0))}
     except Exception as e:
         msg = str(e)
         if hasattr(e, 'read'):
@@ -130,7 +134,7 @@ def _call_yandex(system_prompt: str, user_prompt: str) -> dict:
                 msg = e.read().decode('utf-8', errors='ignore')[:300]
             except Exception:
                 pass
-        return {'error': f'Ошибка YandexGPT: {msg[:300]}'}
+        return {'error': f'Ошибка DeepSeek: {msg[:300]}'}
 
 
 def handler(event, context):
@@ -179,7 +183,7 @@ def handler(event, context):
             if ctx_data:
                 full_prompt += '\n\nДанные:\n' + json.dumps(ctx_data, ensure_ascii=False)[:3000]
 
-            result = _call_yandex(sys_prompt, full_prompt)
+            result = _call_deepseek(sys_prompt, full_prompt)
             if 'error' in result:
                 return _err(502, result['error'])
 

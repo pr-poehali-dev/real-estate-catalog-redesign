@@ -164,13 +164,8 @@ export default function HomePage({ properties, favorites, compareList, onToggleF
                 if (stat.deal === 'business') navigate('/catalog?deal=business');
                 else navigate('/catalog');
               };
-              const Wrapper: 'button' | 'div' = clickable ? 'button' : 'div';
-              return (
-                <Wrapper
-                  key={stat.label}
-                  onClick={clickable ? goCatalog : undefined}
-                  className={`flex items-center gap-2.5 animate-fade-in-up stagger-${i + 1} text-left ${clickable ? 'hover:bg-muted/40 p-1.5 rounded-lg transition-colors cursor-pointer' : 'p-1.5'}`}
-                >
+              const inner = (
+                <>
                   <div className="w-8 h-8 rounded-lg bg-brand-blue/10 flex items-center justify-center flex-shrink-0">
                     <Icon name={stat.icon} size={16} className="text-brand-blue" />
                   </div>
@@ -181,7 +176,21 @@ export default function HomePage({ properties, favorites, compareList, onToggleF
                     </div>
                     <div className="text-[11px] text-muted-foreground mt-0.5">{stat.label}</div>
                   </div>
-                </Wrapper>
+                </>
+              );
+              const baseCls = `flex items-center gap-2.5 animate-fade-in-up stagger-${i + 1} text-left p-1.5`;
+              if (clickable) {
+                return (
+                  <button key={stat.label} type="button" onClick={goCatalog}
+                    className={`${baseCls} hover:bg-muted/40 rounded-lg transition-colors cursor-pointer`}>
+                    {inner}
+                  </button>
+                );
+              }
+              return (
+                <div key={stat.label} className={baseCls}>
+                  {inner}
+                </div>
               );
             })}
           </div>
