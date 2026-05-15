@@ -232,38 +232,6 @@ export default function HomePage({ properties, favorites, compareList, onToggleF
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-foreground text-white/70 py-10">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-start justify-between gap-6">
-            <div>
-              <div className="font-display font-800 text-xl text-white mb-1">BIZNEST</div>
-              <div className="text-sm">Коммерческая недвижимость и готовый бизнес</div>
-            </div>
-            <div className="grid grid-cols-2 gap-8 text-sm">
-              <div>
-                <div className="text-white font-semibold mb-3">Каталог</div>
-                <ul className="space-y-2">
-                  {['Офисы', 'Торговля', 'Склады', 'Рестораны'].map(i => (
-                    <li key={i}><button className="hover:text-white transition-colors">{i}</button></li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <div className="text-white font-semibold mb-3">Компания</div>
-                <ul className="space-y-2">
-                  {['О нас', 'Контакты', 'Оценка бизнеса', 'Партнёрам'].map(i => (
-                    <li key={i}><button className="hover:text-white transition-colors">{i}</button></li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-          <div className="border-t border-white/10 mt-8 pt-6 text-sm">
-            © 2024 BIZNEST. Все права защищены.
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
