@@ -1,6 +1,7 @@
 import { Page } from '@/App';
 import Icon from '@/components/ui/icon';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSettings } from '@/contexts/SettingsContext';
 
 interface NavbarProps {
   currentPage: Page;
@@ -20,7 +21,10 @@ const navItems = [
 
 export default function Navbar({ currentPage, setCurrentPage, favoritesCount, compareCount, onLogin, onAdmin }: NavbarProps) {
   const { user } = useAuth();
+  const { settings } = useSettings();
   const isStaff = user && ['admin', 'editor', 'manager'].includes(user.role);
+  const brandName = settings.company_name || 'BIZNEST';
+  const logoUrl = settings.logo_url;
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-border shadow-sm">
       <div className="container mx-auto px-4">
@@ -30,11 +34,15 @@ export default function Navbar({ currentPage, setCurrentPage, favoritesCount, co
             onClick={() => setCurrentPage('home')}
             className="flex items-center gap-2 group"
           >
-            <div className="w-9 h-9 rounded-lg btn-blue flex items-center justify-center">
-              <Icon name="Building" size={20} className="text-white" />
-            </div>
+            {logoUrl ? (
+              <img src={logoUrl} alt={brandName} className="w-9 h-9 rounded-lg object-contain bg-white" />
+            ) : (
+              <div className="w-9 h-9 rounded-lg btn-blue flex items-center justify-center">
+                <Icon name="Building" size={20} className="text-white" />
+              </div>
+            )}
             <div className="flex flex-col leading-none">
-              <span className="font-display font-800 text-lg text-brand-blue tracking-tight">BIZNEST</span>
+              <span className="font-display font-800 text-lg text-brand-blue tracking-tight">{brandName}</span>
               <span className="text-[10px] text-muted-foreground font-body tracking-widest uppercase">Недвижимость & Бизнес</span>
             </div>
           </button>

@@ -84,11 +84,20 @@ export const adminApi = {
   updateSettings: (data: Record<string, unknown>) =>
     req(`${ADMIN_URL}?resource=settings`, { method: 'PUT', body: JSON.stringify(data) }),
 
+  // cities
+  listCities: () => req(`${ADMIN_URL}?resource=cities`),
+  createCity: (data: Record<string, unknown>) =>
+    req(`${ADMIN_URL}?resource=cities`, { method: 'POST', body: JSON.stringify(data) }),
+  updateCity: (id: number, data: Record<string, unknown>) =>
+    req(`${ADMIN_URL}?resource=cities&id=${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteCity: (id: number) =>
+    req(`${ADMIN_URL}?resource=cities&id=${id}`, { method: 'DELETE' }),
+
   // stats
   stats: () => req(`${ADMIN_URL}?resource=stats`),
 };
 
-export type AiAction = 'describe' | 'reply_lead' | 'seo' | 'moderate' | 'analytics' | 'admin';
+export type AiAction = 'describe' | 'reply_lead' | 'seo' | 'moderate' | 'analytics' | 'admin' | 'add_city';
 
 export const aiApi = {
   ask: (action: AiAction, prompt: string, context_data?: unknown) =>

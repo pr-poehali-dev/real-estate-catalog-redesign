@@ -75,3 +75,25 @@ export async function sendLead(payload: LeadInput): Promise<{ success: boolean; 
   });
   return res.json();
 }
+
+export interface PublicSettings {
+  company_name?: string;
+  company_phone?: string;
+  company_email?: string;
+  company_address?: string;
+  hero_title?: string;
+  hero_subtitle?: string;
+  about_text?: string;
+  logo_url?: string;
+  main_city?: string;
+}
+
+export async function fetchPublicSettings(): Promise<PublicSettings> {
+  try {
+    const res = await fetch(`${LISTINGS_URL}?resource=public_settings`);
+    const data = await res.json();
+    return data.settings || {};
+  } catch {
+    return {};
+  }
+}

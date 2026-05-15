@@ -38,6 +38,15 @@ def handler(event: dict, context) -> dict:
     conn = psycopg2.connect(dsn)
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            if params.get('resource') == 'public_settings':
+                cur.execute(
+                    "SELECT company_name, company_phone, company_email, company_address, "
+                    "hero_title, hero_subtitle, about_text, logo_url, main_city "
+                    "FROM t_p71821556_real_estate_catalog_.settings ORDER BY id ASC LIMIT 1"
+                )
+                row = cur.fetchone()
+                return _ok({'settings': dict(row) if row else {}})
+
             listing_id = params.get('id')
             if listing_id:
                 cur.execute(

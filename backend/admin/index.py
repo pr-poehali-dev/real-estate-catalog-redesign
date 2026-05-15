@@ -41,7 +41,7 @@ def _int_or_null(v):
         return 'NULL'
     try:
         return str(int(v))
-    except (TypeError, ValueError):
+    except Exception:
         return 'NULL'
 
 
@@ -65,12 +65,16 @@ def _can(role, resource, op):
     if role == 'admin':
         return True
     if role == 'manager':
+        if resource == 'cities':
+            return op == 'read'
         return resource in ('listings', 'leads') and op in ('read', 'create', 'update')
     if role == 'editor':
         if resource == 'listings':
             return op in ('read', 'create', 'update')
         if resource in ('pages', 'settings'):
             return op in ('read', 'update')
+        if resource == 'cities':
+            return op in ('read', 'create', 'update')
         if resource == 'leads':
             return op == 'read'
         return False
@@ -123,6 +127,8 @@ def handler(event, context):
                 return _pages(cur, conn, method, rid, event, user)
             if resource == 'settings':
                 return _settings(cur, conn, method, event, user)
+            if resource == 'cities':
+                return _cities(cur, conn, method, rid, event, user)
             if resource == 'stats':
                 return _stats(cur)
 
@@ -147,17 +153,20 @@ def _listings(cur, conn, method, rid, event, user):
     if method == 'POST':
         sql = (
             f"INSERT INTO {SCHEMA}.listings "
-            f"(title, description, category, deal, price, price_per_m2, area, payback, profit, floor, total_floors, address, district, lat, lng, image, tags, is_hot, is_new, status, author_id) VALUES ("
+            f"(title, description, category, deal, price, price_per_m2, area, payback, profit, floor, total_floors, address, district, city, lat, lng, image, tags, is_hot, is_new, status, owner_name, owner_phone, price_unit, author_id) VALUES ("
             f"{_str_or_null(body.get('title'), 255)}, {_str_or_null(body.get('description'), 5000)}, "
             f"{_str_or_null(body.get('category'), 50)}, {_str_or_null(body.get('deal'), 20)}, "
             f"{_int_or_null(body.get('price'))}, {_int_or_null(body.get('price_per_m2'))}, "
             f"{_int_or_null(body.get('area'))}, {_int_or_null(body.get('payback'))}, "
             f"{_int_or_null(body.get('profit'))}, {_int_or_null(body.get('floor'))}, "
             f"{_int_or_null(body.get('total_floors'))}, {_str_or_null(body.get('address'), 255)}, "
-            f"{_str_or_null(body.get('district'), 100)}, {_int_or_null(body.get('lat'))}, "
+            f"{_str_or_null(body.get('district'), 100)}, {_str_or_null(body.get('city') or 'Краснодар', 100)}, "
+            f"{_int_or_null(body.get('lat'))}, "
             f"{_int_or_null(body.get('lng'))}, {_str_or_null(body.get('image'), 500)}, "
             f"{_str_or_null(body.get('tags'), 1000)}, {_bool(body.get('is_hot'))}, "
             f"{_bool(body.get('is_new'))}, {_str_or_null(body.get('status') or 'active', 20)}, "
+            f"{_str_or_null(body.get('owner_name'), 150)}, {_str_or_null(body.get('owner_phone'), 30)}, "
+            f"{_str_or_null(body.get('price_unit') or 'm2', 10)}, "
             f"{user['id']}) RETURNING id"
         )
         cur.execute(sql)
@@ -168,7 +177,8 @@ def _listings(cur, conn, method, rid, event, user):
     if method == 'PUT' and rid:
         fields = []
         for f, length in [('title', 255), ('description', 5000), ('category', 50), ('deal', 20),
-                          ('address', 255), ('district', 100), ('image', 500), ('tags', 1000), ('status', 20)]:
+                          ('address', 255), ('district', 100), ('city', 100), ('image', 500), ('tags', 1000),
+                          ('status', 20), ('owner_name', 150), ('owner_phone', 30), ('price_unit', 10)]:
             if f in body:
                 fields.append(f"{f} = {_str_or_null(body.get(f), length)}")
         for f in ('price', 'price_per_m2', 'area', 'payback', 'profit', 'floor', 'total_floors'):
@@ -341,13 +351,59 @@ def _settings(cur, conn, method, event, user):
         fields = []
         for f, length in [('company_name', 255), ('company_phone', 30), ('company_email', 100),
                           ('company_address', 255), ('hero_title', 500), ('hero_subtitle', 1000),
-                          ('about_text', 5000)]:
+                          ('about_text', 5000), ('logo_url', 500), ('main_city', 100)]:
             if f in body:
                 fields.append(f"{f} = {_str_or_null(body[f], length)}")
         if not fields:
             return _err(400, 'Нет полей')
         fields.append("updated_at = NOW()")
         cur.execute(f"UPDATE {SCHEMA}.settings SET {', '.join(fields)} WHERE id = (SELECT id FROM {SCHEMA}.settings ORDER BY id ASC LIMIT 1)")
+        conn.commit()
+        return _ok({'success': True})
+
+    return _err(400, 'Bad request')
+
+
+def _cities(cur, conn, method, rid, event, user):
+    if method == 'GET':
+        cur.execute(f"SELECT * FROM {SCHEMA}.cities ORDER BY sort_order ASC, name ASC")
+        return _ok({'cities': [dict(r) for r in cur.fetchall()]})
+
+    body = json.loads(event.get('body') or '{}')
+
+    if method == 'POST':
+        name = _safe(body.get('name') or '', 100)
+        region = _safe(body.get('region') or '', 150)
+        if not name:
+            return _err(400, 'Название обязательно')
+        cur.execute(f"SELECT id FROM {SCHEMA}.cities WHERE name = '{name}'")
+        if cur.fetchone():
+            return _err(409, 'Город уже добавлен')
+        region_s = "NULL" if not region else f"'{region}'"
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.cities (name, region) VALUES ('{name}', {region_s}) RETURNING id"
+        )
+        new_id = cur.fetchone()['id']
+        conn.commit()
+        return _ok({'id': new_id, 'success': True})
+
+    if method == 'PUT' and rid:
+        fields = []
+        for f, length in [('name', 100), ('region', 150)]:
+            if f in body:
+                fields.append(f"{f} = {_str_or_null(body[f], length)}")
+        if 'is_active' in body:
+            fields.append(f"is_active = {_bool(body['is_active'])}")
+        if 'sort_order' in body:
+            fields.append(f"sort_order = {_int_or_null(body['sort_order'])}")
+        if not fields:
+            return _err(400, 'Нет полей')
+        cur.execute(f"UPDATE {SCHEMA}.cities SET {', '.join(fields)} WHERE id = {int(rid)}")
+        conn.commit()
+        return _ok({'success': True})
+
+    if method == 'DELETE' and rid:
+        cur.execute(f"UPDATE {SCHEMA}.cities SET is_active = FALSE WHERE id = {int(rid)}")
         conn.commit()
         return _ok({'success': True})
 
@@ -385,4 +441,7 @@ def _ser(row):
     for k in ('lat', 'lng'):
         if row.get(k) is not None:
             row[k] = float(row[k])
+    for k in ('created_at', 'updated_at'):
+        if row.get(k) is not None:
+            row[k] = row[k].isoformat()
     return row
