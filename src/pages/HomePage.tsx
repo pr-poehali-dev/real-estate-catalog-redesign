@@ -56,7 +56,7 @@ export default function HomePage({ properties, favorites, compareList, onToggleF
   const categoryCount = (type: string): number => {
     const fromStats = stats.by_category?.[type];
     if (typeof fromStats === 'number') return fromStats;
-    return properties.filter(p => p.type === type).length;
+    return properties.filter(p => String(p.type) === type).length;
   };
 
   const mainCity = settings.main_city || stats.main_city || 'Краснодар';
@@ -67,7 +67,7 @@ export default function HomePage({ properties, favorites, compareList, onToggleF
 
   const STATS_VIEW = [
     { value: `${totalCount}+`, label: 'Объектов в базе', icon: 'Building2', deal: 'all' as const },
-    { value: `${properties.filter(p => p.category === 'business').length}+`, label: 'Готовых бизнесов', icon: 'Briefcase', deal: 'business' as const },
+    { value: `${properties.filter(p => p.type === 'business').length}+`, label: 'Готовых бизнесов', icon: 'Briefcase', deal: 'business' as const },
     { value: '98%', label: 'Успешных сделок', icon: 'TrendingUp', deal: null },
     { value: `с ${settings.company_since_year || 2007}`, label: 'На рынке', icon: 'Award', deal: null },
   ];

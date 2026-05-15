@@ -75,8 +75,8 @@ export default function CatalogPage({ properties, favorites, compareList, onTogg
       );
     }
 
-    if (dealFilter !== 'all') result = result.filter(p => p.deal === dealFilter);
-    if (typeFilter !== 'all') result = result.filter(p => p.type === typeFilter);
+    if (dealFilter !== 'all') result = result.filter(p => String(p.deal) === dealFilter);
+    if (typeFilter !== 'all') result = result.filter(p => String(p.type) === typeFilter);
     if (minArea) result = result.filter(p => p.area >= Number(minArea));
     if (maxPrice) result = result.filter(p => p.price <= Number(maxPrice) * 1000000);
 

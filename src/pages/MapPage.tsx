@@ -32,7 +32,7 @@ export default function MapPage({
   const [activeType, setActiveType] = useState('all');
 
   const filtered = useMemo(
-    () => activeType === 'all' ? properties : properties.filter(p => p.type === activeType),
+    () => activeType === 'all' ? properties : properties.filter(p => String(p.type) === activeType),
     [activeType, properties],
   );
 
@@ -65,7 +65,7 @@ export default function MapPage({
           Все ({properties.length})
         </button>
         {types.map(type => {
-          const count = properties.filter(p => p.type === type).length;
+          const count = properties.filter(p => String(p.type) === type).length;
           if (!count) return null;
           return (
             <button

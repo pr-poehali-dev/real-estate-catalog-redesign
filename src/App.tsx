@@ -18,7 +18,7 @@ import ScrollToTop from './components/ScrollToTop';
 import { fetchListings } from './lib/api';
 import { useAuth } from './contexts/AuthContext';
 
-export type PropertyType = 'office' | 'retail' | 'warehouse' | 'restaurant' | 'business' | 'production';
+export type PropertyType = 'office' | 'retail' | 'warehouse' | 'restaurant' | 'business' | 'production' | 'hotel' | 'gab';
 export type DealType = 'sale' | 'rent' | 'business';
 
 export interface Property {

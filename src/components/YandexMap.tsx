@@ -124,10 +124,15 @@ export default function YandexMap({
   }, [points, center, zoom, onPointClick]);
 
   useEffect(() => {
+    const ref = mapRef;
     return () => {
-      if (mapRef.current) {
-        try { mapRef.current.destroy(); } catch { /* ignore */ }
-        mapRef.current = null;
+      if (ref.current) {
+        try {
+          ref.current.destroy();
+        } catch {
+          // ignore destroy errors
+        }
+        ref.current = null;
       }
     };
   }, []);
