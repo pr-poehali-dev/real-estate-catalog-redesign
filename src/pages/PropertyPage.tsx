@@ -1,0 +1,248 @@
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { fetchListingById, ListingDetail, sendLead } from '@/lib/api';
+import { extractIdFromSlug } from '@/lib/slug';
+import { useSettings } from '@/contexts/SettingsContext';
+import Icon from '@/components/ui/icon';
+import { formatPrice } from '@/components/PropertyCard';
+
+const TYPE_LABELS: Record<string, string> = {
+  office: 'Офис', retail: 'Торговля', warehouse: 'Склад',
+  restaurant: 'Ресторан', business: 'Бизнес', production: 'Производство',
+};
+const DEAL_LABELS: Record<string, string> = {
+  sale: 'Продажа', rent: 'Аренда', business: 'Готовый бизнес',
+};
+
+interface Props {
+  onToggleFavorite: (id: number) => void;
+  onToggleCompare: (id: number) => void;
+  favorites: number[];
+  compareList: number[];
+}
+
+export default function PropertyPage({ onToggleFavorite, onToggleCompare, favorites, compareList }: Props) {
+  const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
+  const { settings } = useSettings();
+  const [item, setItem] = useState<ListingDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeImg, setActiveImg] = useState(0);
+  const [form, setForm] = useState({ name: '', phone: '', message: '' });
+  const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    const id = extractIdFromSlug(slug || '');
+    if (!id) { setLoading(false); return; }
+    setLoading(true);
+    fetchListingById(id).then(d => setItem(d)).finally(() => setLoading(false));
+  }, [slug]);
+
+  // SEO meta
+  useEffect(() => {
+    if (!item) return;
+    const title = item.seoTitle || `${item.title} — ${item.city || 'Краснодар'} | ${settings.company_name || 'BIZNEST'}`;
+    document.title = title;
+    const desc = item.seoDescription || (item.description || '').slice(0, 160);
+    let m = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
+    if (!m) {
+      m = document.createElement('meta');
+      m.name = 'description';
+      document.head.appendChild(m);
+    }
+    m.content = desc;
+  }, [item, settings.company_name]);
+
+  if (loading) {
+    return <div className="container mx-auto px-4 py-20 text-center text-muted-foreground">Загрузка объекта...</div>;
+  }
+  if (!item) {
+    return (
+      <div className="container mx-auto px-4 py-20 text-center">
+        <div className="font-display font-700 text-xl mb-2">Объект не найден</div>
+        <button onClick={() => navigate('/catalog')} className="btn-blue text-white px-4 py-2 rounded-xl text-sm">К каталогу</button>
+      </div>
+    );
+  }
+
+  const imgs = item.images && item.images.length ? item.images : [item.image].filter(Boolean);
+  const mainImg = imgs[activeImg] || imgs[0];
+  const isFav = favorites.includes(item.id);
+  const inCompare = compareList.includes(item.id);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSending(true);
+    try {
+      await sendLead({
+        name: form.name, phone: form.phone, message: form.message,
+        listing_id: item.id, source: 'property-page',
+      });
+      setSent(true);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="bg-background">
+      <div className="container mx-auto px-4 py-6">
+        <button onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4">
+          <Icon name="ArrowLeft" size={16} /> Назад
+        </button>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Левая часть: фото + описание */}
+          <div className="lg:col-span-2 space-y-5">
+            {mainImg ? (
+              <div className="relative rounded-2xl overflow-hidden bg-muted aspect-[16/10]">
+                <img src={mainImg} alt={item.title} className="w-full h-full object-cover" />
+                <div className="absolute top-3 left-3 flex gap-1.5">
+                  <span className="text-xs font-semibold px-2 py-1 rounded-full bg-brand-blue text-white">
+                    {DEAL_LABELS[item.deal] || item.deal}
+                  </span>
+                  <span className="text-xs font-semibold px-2 py-1 rounded-full bg-black/40 text-white backdrop-blur-sm">
+                    {TYPE_LABELS[item.type] || item.type}
+                  </span>
+                  {item.isHot && <span className="text-xs font-semibold px-2 py-1 rounded-full btn-orange text-white">🔥 Горячее</span>}
+                </div>
+                <div className="absolute top-3 right-3 flex gap-2">
+                  <button onClick={() => onToggleFavorite(item.id)}
+                    className={`w-9 h-9 rounded-full flex items-center justify-center shadow ${isFav ? 'bg-red-500 text-white' : 'bg-white'}`}>
+                    <Icon name="Heart" size={16} />
+                  </button>
+                  <button onClick={() => onToggleCompare(item.id)}
+                    className={`w-9 h-9 rounded-full flex items-center justify-center shadow ${inCompare ? 'bg-brand-orange text-white' : 'bg-white'}`}>
+                    <Icon name="GitCompare" size={16} />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="aspect-[16/10] rounded-2xl bg-muted flex items-center justify-center">
+                <Icon name="Image" size={48} className="text-muted-foreground" />
+              </div>
+            )}
+
+            {imgs.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {imgs.map((u, i) => (
+                  <button key={u + i} onClick={() => setActiveImg(i)}
+                    className={`w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 ${i === activeImg ? 'border-brand-blue' : 'border-transparent'}`}>
+                    <img src={u} alt="" className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="bg-white rounded-2xl p-5 shadow-sm">
+              <h1 className="font-display font-800 text-2xl md:text-3xl text-foreground mb-2">{item.title}</h1>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Icon name="MapPin" size={14} />
+                {[item.city || 'Краснодар', item.district, item.address].filter(Boolean).join(', ')}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl p-5 shadow-sm grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Stat icon="Maximize" label="Площадь" value={`${item.area} м²`} />
+              <Stat icon="Tag" label="Цена" value={formatPrice(item.price, item.deal)} />
+              {item.pricePerM2 && <Stat icon="DollarSign" label="За м²" value={`${item.pricePerM2.toLocaleString('ru')} ₽`} />}
+              {item.floor && <Stat icon="Layers" label="Этаж" value={`${item.floor}/${item.totalFloors || '—'}`} />}
+              {item.payback && <Stat icon="TrendingUp" label="Окупаемость" value={`${item.payback} мес`} />}
+              {item.profit && <Stat icon="LineChart" label="Прибыль/мес" value={`${(item.profit / 1000).toFixed(0)} тыс ₽`} />}
+            </div>
+
+            {item.description && (
+              <div className="bg-white rounded-2xl p-5 shadow-sm">
+                <div className="font-display font-700 text-lg mb-3">Описание</div>
+                <div className="text-sm whitespace-pre-wrap text-foreground/85 leading-relaxed">{item.description}</div>
+              </div>
+            )}
+
+            {item.tags && item.tags.length > 0 && (
+              <div className="bg-white rounded-2xl p-5 shadow-sm">
+                <div className="font-display font-700 text-lg mb-3">Особенности</div>
+                <div className="flex flex-wrap gap-2">
+                  {item.tags.map(t => (
+                    <span key={t} className="text-xs px-2.5 py-1 rounded-full bg-brand-blue/10 text-brand-blue font-medium">{t}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {item.videoUrl && (
+              <div className="bg-white rounded-2xl p-5 shadow-sm">
+                <div className="font-display font-700 text-lg mb-3 flex items-center gap-2">
+                  <Icon name="Video" size={18} /> Видео-обзор
+                </div>
+                <a href={item.videoUrl} target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-brand-blue hover:underline text-sm">
+                  Открыть видео <Icon name="ExternalLink" size={14} />
+                </a>
+              </div>
+            )}
+          </div>
+
+          {/* Правая часть: цена + форма */}
+          <div className="space-y-4">
+            <div className="bg-white rounded-2xl p-5 shadow-sm sticky top-20">
+              <div className="font-display font-900 text-3xl text-brand-blue mb-1">
+                {formatPrice(item.price, item.deal)}
+              </div>
+              {item.pricePerM2 && (
+                <div className="text-sm text-muted-foreground mb-4">
+                  {item.pricePerM2.toLocaleString('ru')} ₽/м²
+                </div>
+              )}
+
+              {sent ? (
+                <div className="py-6 text-center">
+                  <Icon name="CheckCircle2" size={40} className="mx-auto mb-2 text-emerald-500" />
+                  <div className="font-semibold">Заявка отправлена!</div>
+                  <div className="text-sm text-muted-foreground mt-1">Менеджер свяжется с вами в течение 15 минут.</div>
+                </div>
+              ) : (
+                <form onSubmit={submit} className="space-y-3">
+                  <input required placeholder="Ваше имя" value={form.name}
+                    onChange={e => setForm({ ...form, name: e.target.value })}
+                    className="w-full px-3 py-2.5 border rounded-lg" />
+                  <input required placeholder="Телефон" value={form.phone}
+                    onChange={e => setForm({ ...form, phone: e.target.value })}
+                    className="w-full px-3 py-2.5 border rounded-lg" />
+                  <textarea placeholder="Комментарий (необязательно)" rows={3}
+                    value={form.message} onChange={e => setForm({ ...form, message: e.target.value })}
+                    className="w-full px-3 py-2.5 border rounded-lg" />
+                  <button type="submit" disabled={sending}
+                    className="w-full btn-blue text-white py-3 rounded-xl font-semibold disabled:opacity-50">
+                    {sending ? 'Отправка...' : 'Заказать просмотр'}
+                  </button>
+                </form>
+              )}
+
+              {settings.company_phone && (
+                <a href={`tel:${settings.company_phone}`}
+                  className="mt-3 w-full block text-center text-brand-blue font-semibold text-sm hover:underline">
+                  <Icon name="Phone" size={14} className="inline mr-1" />
+                  {settings.company_phone}
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Stat({ icon, label, value }: { icon: string; label: string; value: string }) {
+  return (
+    <div>
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
+        <Icon name={icon} size={12} />
+        {label}
+      </div>
+      <div className="font-display font-700 text-base">{value}</div>
+    </div>
+  );
+}

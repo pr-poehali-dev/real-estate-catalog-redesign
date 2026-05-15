@@ -42,7 +42,9 @@ def handler(event: dict, context) -> dict:
                 cur.execute(
                     "SELECT company_name, company_phone, company_email, company_address, "
                     "hero_title, hero_subtitle, about_text, logo_url, main_city, "
-                    "watermark_url, watermark_enabled, watermark_position, watermark_opacity "
+                    "watermark_url, watermark_enabled, watermark_position, watermark_opacity, "
+                    "yandex_maps_api_key, yandex_metrika_id, google_analytics_id, "
+                    "company_since_year, site_url, seo_keywords, seo_description "
                     "FROM t_p71821556_real_estate_catalog_.settings ORDER BY id ASC LIMIT 1"
                 )
                 row = cur.fetchone()
@@ -84,6 +86,46 @@ def handler(event: dict, context) -> dict:
                         d['created_at'] = d['created_at'].isoformat()
                     rows.append(d)
                 return _ok({'tenants': rows})
+
+            if params.get('resource') == 'sitemap':
+                cur.execute(
+                    "SELECT site_url FROM t_p71821556_real_estate_catalog_.settings ORDER BY id ASC LIMIT 1"
+                )
+                row = cur.fetchone()
+                base = (row.get('site_url') if row else None) or 'https://biznest.poehali.dev'
+                base = base.rstrip('/')
+                cur.execute(
+                    "SELECT id, title, slug, updated_at FROM t_p71821556_real_estate_catalog_.listings "
+                    "WHERE status = 'active' ORDER BY updated_at DESC LIMIT 5000"
+                )
+                rows = cur.fetchall()
+                items = []
+                items.append(f'<url><loc>{base}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>')
+                for p in ['catalog', 'map', 'network-tenants']:
+                    items.append(f'<url><loc>{base}/{p}</loc><changefreq>daily</changefreq><priority>0.8</priority></url>')
+                for r in rows:
+                    rid = r['id']
+                    slug = r.get('slug') or _make_slug(r.get('title') or '', rid)
+                    upd = r['updated_at'].date().isoformat() if r.get('updated_at') else ''
+                    items.append(
+                        f'<url><loc>{base}/object/{slug}</loc>'
+                        + (f'<lastmod>{upd}</lastmod>' if upd else '')
+                        + '<changefreq>weekly</changefreq><priority>0.7</priority></url>'
+                    )
+                xml = (
+                    '<?xml version="1.0" encoding="UTF-8"?>\n'
+                    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+                    + '\n'.join(items)
+                    + '\n</urlset>'
+                )
+                return {
+                    'statusCode': 200,
+                    'headers': {
+                        'Access-Control-Allow-Origin': '*',
+                        'Content-Type': 'application/xml; charset=utf-8',
+                    },
+                    'body': xml,
+                }
 
             if params.get('resource') == 'public_stats':
                 cur.execute(
@@ -153,6 +195,34 @@ def handler(event: dict, context) -> dict:
             return _ok({'listings': items, 'total': len(items)})
     finally:
         conn.close()
+
+
+_RU_MAP = {
+    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'e',
+    'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm',
+    'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
+    'ф': 'f', 'х': 'h', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'sch',
+    'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya',
+}
+
+
+def _make_slug(title: str, listing_id: int) -> str:
+    s = (title or '').lower()
+    out = []
+    for ch in s:
+        out.append(_RU_MAP.get(ch, ch))
+    s = ''.join(out)
+    clean = []
+    for ch in s:
+        if ch.isalnum():
+            clean.append(ch)
+        elif ch in (' ', '-', '_'):
+            clean.append('-')
+    s = ''.join(clean)
+    while '--' in s:
+        s = s.replace('--', '-')
+    s = s.strip('-')[:80].rstrip('-') or 'object'
+    return f"{s}-{listing_id}"
 
 
 def _serialize(row: dict) -> dict:

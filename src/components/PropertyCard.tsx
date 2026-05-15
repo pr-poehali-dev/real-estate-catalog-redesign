@@ -1,5 +1,7 @@
+import { Link } from 'react-router-dom';
 import { Property } from '@/App';
 import Icon from '@/components/ui/icon';
+import { listingSlug } from '@/lib/slug';
 
 interface PropertyCardProps {
   property: Property;
@@ -49,11 +51,13 @@ export default function PropertyCard({
     >
       {/* Image */}
       <div className="relative h-48 overflow-hidden bg-muted">
-        <img
-          src={property.image}
-          alt={property.title}
-          className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-        />
+        <Link to={`/object/${listingSlug(property.title, property.id)}`} className="block w-full h-full">
+          <img
+            src={property.image}
+            alt={property.title}
+            className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+          />
+        </Link>
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5">
           <span className="text-[11px] font-semibold font-display px-2 py-0.5 rounded-full bg-brand-blue text-white">
@@ -97,9 +101,11 @@ export default function PropertyCard({
 
       {/* Content */}
       <div className="p-4">
-        <h3 className="font-display font-700 text-base text-foreground leading-snug mb-1 line-clamp-2">
-          {property.title}
-        </h3>
+        <Link to={`/object/${listingSlug(property.title, property.id)}`}>
+          <h3 className="font-display font-700 text-base text-foreground leading-snug mb-1 line-clamp-2 hover:text-brand-blue transition-colors">
+            {property.title}
+          </h3>
+        </Link>
         <div className="flex items-center gap-1 text-muted-foreground text-xs mb-3">
           <Icon name="MapPin" size={12} />
           <span className="truncate">{property.address}</span>
@@ -151,9 +157,10 @@ export default function PropertyCard({
               </div>
             )}
           </div>
-          <button className="btn-orange text-white text-xs font-semibold font-display px-3 py-2 rounded-lg">
+          <Link to={`/object/${listingSlug(property.title, property.id)}`}
+            className="btn-orange text-white text-xs font-semibold font-display px-3 py-2 rounded-lg">
             Подробнее
-          </button>
+          </Link>
         </div>
       </div>
     </div>

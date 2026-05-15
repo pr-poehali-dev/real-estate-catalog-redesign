@@ -58,6 +58,59 @@ export async function fetchListings(): Promise<Property[]> {
   return (data.listings || []).map(mapListing);
 }
 
+export interface ListingDetail extends Property {
+  images?: string[];
+  city?: string;
+  priceUnit?: string;
+  purpose?: string;
+  condition?: string;
+  parking?: string;
+  entrance?: string;
+  videoUrl?: string;
+  videoType?: string;
+  ownerName?: string;
+  ownerPhone?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+}
+
+export async function fetchListingById(id: number): Promise<ListingDetail | null> {
+  try {
+    const res = await fetch(`${LISTINGS_URL}?id=${id}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const it = data.listing;
+    if (!it) return null;
+    const base = mapListing(it);
+    const imgs: string[] = (() => {
+      if (Array.isArray(it.images)) return it.images;
+      if (typeof it.images === 'string' && it.images) {
+        const sep = it.images.includes('|') ? '|' : ',';
+        return it.images.split(sep).map((s: string) => s.trim()).filter(Boolean);
+      }
+      return base.image ? [base.image] : [];
+    })();
+    return {
+      ...base,
+      images: imgs,
+      city: it.city || 'Краснодар',
+      priceUnit: it.price_unit,
+      purpose: it.purpose,
+      condition: it.condition,
+      parking: it.parking,
+      entrance: it.entrance,
+      videoUrl: it.video_url,
+      videoType: it.video_type,
+      ownerName: it.owner_name,
+      ownerPhone: it.owner_phone,
+      seoTitle: it.seo_title,
+      seoDescription: it.seo_description,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export interface LeadInput {
   name: string;
   phone: string;
@@ -86,6 +139,13 @@ export interface PublicSettings {
   about_text?: string;
   logo_url?: string;
   main_city?: string;
+  yandex_maps_api_key?: string;
+  yandex_metrika_id?: string;
+  google_analytics_id?: string;
+  company_since_year?: number;
+  site_url?: string;
+  seo_keywords?: string;
+  seo_description?: string;
 }
 
 export async function fetchPublicSettings(): Promise<PublicSettings> {

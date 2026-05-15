@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Property, Page } from '@/App';
 import PropertyCard from '@/components/PropertyCard';
 import Icon from '@/components/ui/icon';
@@ -29,6 +30,7 @@ const CATEGORIES = [
 
 export default function HomePage({ properties, favorites, compareList, onToggleFavorite, onToggleCompare, onNavigate }: HomePageProps) {
   const { settings } = useSettings();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [stats, setStats] = useState<PublicStats>({ total: 0, main_city: 'Краснодар' });
 
@@ -49,7 +51,7 @@ export default function HomePage({ properties, favorites, compareList, onToggleF
     { value: `${totalCount}+`, label: 'Объектов в базе', icon: 'Building2', deal: 'all' as const },
     { value: `${properties.filter(p => p.category === 'business').length}+`, label: 'Готовых бизнесов', icon: 'Briefcase', deal: 'business' as const },
     { value: '98%', label: 'Успешных сделок', icon: 'TrendingUp', deal: null },
-    { value: 'с 2007', label: 'На рынке', icon: 'Award', deal: null },
+    { value: `с ${settings.company_since_year || 2007}`, label: 'На рынке', icon: 'Award', deal: null },
   ];
 
   return (
@@ -109,11 +111,15 @@ export default function HomePage({ properties, favorites, compareList, onToggleF
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {STATS_VIEW.map((stat, i) => {
               const clickable = stat.deal !== null;
+              const goCatalog = () => {
+                if (stat.deal === 'business') navigate('/catalog?deal=business');
+                else navigate('/catalog');
+              };
               const Wrapper: 'button' | 'div' = clickable ? 'button' : 'div';
               return (
                 <Wrapper
                   key={stat.label}
-                  onClick={clickable ? () => onNavigate('catalog') : undefined}
+                  onClick={clickable ? goCatalog : undefined}
                   className={`flex items-center gap-3 animate-fade-in-up stagger-${i + 1} text-left ${clickable ? 'hover:bg-muted/40 -m-2 p-2 rounded-xl transition-colors cursor-pointer' : ''}`}
                 >
                   <div className="w-10 h-10 rounded-xl bg-brand-blue/10 flex items-center justify-center flex-shrink-0">
@@ -149,7 +155,7 @@ export default function HomePage({ properties, favorites, compareList, onToggleF
             {CATEGORIES.map((cat, i) => (
               <button
                 key={cat.type}
-                onClick={() => onNavigate('catalog')}
+                onClick={() => navigate(`/catalog?type=${cat.type}`)}
                 className={`group relative flex flex-col items-center gap-3 p-5 bg-white rounded-2xl border border-border hover:border-transparent hover:shadow-xl hover:-translate-y-1 transition-all duration-300 animate-fade-in-up stagger-${i + 1} overflow-hidden`}
               >
                 <div className={`absolute inset-0 bg-gradient-to-br ${cat.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />

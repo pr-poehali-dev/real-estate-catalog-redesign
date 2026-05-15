@@ -1,7 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Property } from '@/App';
 import PropertyCard from '@/components/PropertyCard';
 import Icon from '@/components/ui/icon';
+
+const PAGE_SIZE = 20;
 
 interface CatalogPageProps {
   properties: Property[];
@@ -31,6 +34,7 @@ const PROPERTY_TYPES = [
 ];
 
 export default function CatalogPage({ properties, favorites, compareList, onToggleFavorite, onToggleCompare }: CatalogPageProps) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState('');
   const [dealFilter, setDealFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
@@ -38,6 +42,25 @@ export default function CatalogPage({ properties, favorites, compareList, onTogg
   const [showFilters, setShowFilters] = useState(false);
   const [minArea, setMinArea] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
+  const [page, setPage] = useState(1);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+
+  // Читаем фильтры из URL при первом рендере
+  useEffect(() => {
+    const deal = searchParams.get('deal');
+    const type = searchParams.get('type');
+    if (deal) setDealFilter(deal);
+    if (type) setTypeFilter(type);
+  }, [searchParams]);
+
+  // Синхронизируем выбранный deal в URL
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    if (dealFilter !== 'all') next.set('deal', dealFilter); else next.delete('deal');
+    if (typeFilter !== 'all') next.set('type', typeFilter); else next.delete('type');
+    setSearchParams(next, { replace: true });
+    setPage(1);
+  }, [dealFilter, typeFilter]);
 
   const filtered = useMemo(() => {
     let result = [...properties];
@@ -65,6 +88,19 @@ export default function CatalogPage({ properties, favorites, compareList, onTogg
 
     return result;
   }, [properties, search, dealFilter, typeFilter, sortBy, minArea, maxPrice]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageItems = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return filtered.slice(start, start + PAGE_SIZE);
+  }, [filtered, page]);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(1);
+  }, [totalPages, page]);
+
+  // Сброс страницы при изменении поиска/сортировки
+  useEffect(() => { setPage(1); }, [search, sortBy, minArea, maxPrice]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -201,6 +237,9 @@ export default function CatalogPage({ properties, favorites, compareList, onTogg
         <div className="flex items-center justify-between mb-6">
           <div className="text-sm text-muted-foreground">
             Найдено <span className="font-semibold text-foreground">{filtered.length}</span> объектов
+            {filtered.length > PAGE_SIZE && (
+              <span> · показаны {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)}</span>
+            )}
           </div>
           {(search || dealFilter !== 'all' || typeFilter !== 'all') && (
             <button
@@ -220,19 +259,60 @@ export default function CatalogPage({ properties, favorites, compareList, onTogg
             <div className="text-muted-foreground">Попробуйте изменить параметры поиска</div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filtered.map((property, i) => (
-              <PropertyCard
-                key={property.id}
-                property={property}
-                isFavorite={favorites.includes(property.id)}
-                isCompare={compareList.includes(property.id)}
-                onToggleFavorite={onToggleFavorite}
-                onToggleCompare={onToggleCompare}
-                style={{ animationDelay: `${i * 0.05}s`, opacity: 0 }}
-              />
-            ))}
-          </div>
+          <>
+            <div className="flex items-center justify-end gap-2 mb-4">
+              <button onClick={() => setViewMode('list')}
+                className={`p-2 rounded-lg ${viewMode === 'list' ? 'bg-brand-blue text-white' : 'bg-muted text-foreground'}`}
+                title="Списком">
+                <Icon name="List" size={16} />
+              </button>
+              <button onClick={() => setViewMode('grid')}
+                className={`p-2 rounded-lg ${viewMode === 'grid' ? 'bg-brand-blue text-white' : 'bg-muted text-foreground'}`}
+                title="Плиткой">
+                <Icon name="LayoutGrid" size={16} />
+              </button>
+            </div>
+
+            <div className={viewMode === 'grid'
+              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+              : 'grid grid-cols-1 md:grid-cols-2 gap-4'}>
+              {pageItems.map((property, i) => (
+                <PropertyCard
+                  key={property.id}
+                  property={property}
+                  isFavorite={favorites.includes(property.id)}
+                  isCompare={compareList.includes(property.id)}
+                  onToggleFavorite={onToggleFavorite}
+                  onToggleCompare={onToggleCompare}
+                  style={{ animationDelay: `${i * 0.03}s`, opacity: 0 }}
+                />
+              ))}
+            </div>
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-1 mt-10">
+                <button disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}
+                  className="px-3 py-2 rounded-lg border border-border text-sm font-semibold disabled:opacity-40 hover:bg-muted">
+                  <Icon name="ChevronLeft" size={14} />
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(n => n === 1 || n === totalPages || Math.abs(n - page) <= 2)
+                  .map((n, idx, arr) => (
+                    <span key={n}>
+                      {idx > 0 && arr[idx - 1] !== n - 1 && <span className="px-2 text-muted-foreground">…</span>}
+                      <button onClick={() => setPage(n)}
+                        className={`px-3.5 py-2 rounded-lg text-sm font-semibold ${n === page ? 'bg-brand-blue text-white' : 'border border-border hover:bg-muted'}`}>
+                        {n}
+                      </button>
+                    </span>
+                  ))}
+                <button disabled={page === totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  className="px-3 py-2 rounded-lg border border-border text-sm font-semibold disabled:opacity-40 hover:bg-muted">
+                  <Icon name="ChevronRight" size={14} />
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import CatalogPage from './pages/CatalogPage';
 import MapPage from './pages/MapPage';
@@ -7,9 +8,12 @@ import ComparePage from './pages/ComparePage';
 import LoginPage from './pages/LoginPage';
 import AdminPage from './pages/AdminPage';
 import NetworkTenantsPage from './pages/NetworkTenantsPage';
+import PropertyPage from './pages/PropertyPage';
+import NotFound from './pages/NotFound';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import CompareBar from './components/CompareBar';
+import AnalyticsLoader from './components/AnalyticsLoader';
 import { fetchListings } from './lib/api';
 import { useAuth } from './contexts/AuthContext';
 
@@ -42,15 +46,37 @@ export interface Property {
 export type Page = 'home' | 'catalog' | 'map' | 'favorites' | 'compare' | 'network-tenants';
 export type AppView = 'site' | 'login' | 'admin';
 
+const PATH_BY_PAGE: Record<Page, string> = {
+  home: '/',
+  catalog: '/catalog',
+  map: '/map',
+  favorites: '/favorites',
+  compare: '/compare',
+  'network-tenants': '/network-tenants',
+};
+
+function pageFromPath(pathname: string): Page {
+  if (pathname.startsWith('/catalog')) return 'catalog';
+  if (pathname.startsWith('/map')) return 'map';
+  if (pathname.startsWith('/favorites')) return 'favorites';
+  if (pathname.startsWith('/compare')) return 'compare';
+  if (pathname.startsWith('/network-tenants')) return 'network-tenants';
+  return 'home';
+}
+
 export default function App() {
   const { user, loading: authLoading } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [view, setView] = useState<AppView>('site');
-  const [currentPage, setCurrentPage] = useState<Page>('home');
   const [favorites, setFavorites] = useState<number[]>([]);
   const [compareList, setCompareList] = useState<number[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const currentPage: Page = pageFromPath(location.pathname);
+  const setCurrentPage = (p: Page) => navigate(PATH_BY_PAGE[p]);
 
   useEffect(() => {
     setLoading(true);
@@ -133,6 +159,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background font-body">
+      <AnalyticsLoader />
       <Navbar
         currentPage={currentPage}
         setCurrentPage={setCurrentPage}
@@ -143,51 +170,62 @@ export default function App() {
       />
 
       <main>
-        {currentPage === 'home' && (
-          <HomePage
-            properties={properties}
-            favorites={favorites}
-            compareList={compareList}
-            onToggleFavorite={toggleFavorite}
-            onToggleCompare={toggleCompare}
-            onNavigate={setCurrentPage}
-          />
-        )}
-        {currentPage === 'catalog' && (
-          <CatalogPage
-            properties={properties}
-            favorites={favorites}
-            compareList={compareList}
-            onToggleFavorite={toggleFavorite}
-            onToggleCompare={toggleCompare}
-          />
-        )}
-        {currentPage === 'map' && (
-          <MapPage
-            properties={properties}
-            favorites={favorites}
-            compareList={compareList}
-            onToggleFavorite={toggleFavorite}
-            onToggleCompare={toggleCompare}
-          />
-        )}
-        {currentPage === 'favorites' && (
-          <FavoritesPage
-            properties={favoriteProperties}
-            favorites={favorites}
-            compareList={compareList}
-            onToggleFavorite={toggleFavorite}
-            onToggleCompare={toggleCompare}
-          />
-        )}
-        {currentPage === 'compare' && (
-          <ComparePage
-            properties={compareProperties}
-            onRemove={id => toggleCompare(id)}
-            onNavigate={setCurrentPage}
-          />
-        )}
-        {currentPage === 'network-tenants' && <NetworkTenantsPage />}
+        <Routes>
+          <Route path="/" element={
+            <HomePage
+              properties={properties}
+              favorites={favorites}
+              compareList={compareList}
+              onToggleFavorite={toggleFavorite}
+              onToggleCompare={toggleCompare}
+              onNavigate={setCurrentPage}
+            />
+          } />
+          <Route path="/catalog" element={
+            <CatalogPage
+              properties={properties}
+              favorites={favorites}
+              compareList={compareList}
+              onToggleFavorite={toggleFavorite}
+              onToggleCompare={toggleCompare}
+            />
+          } />
+          <Route path="/map" element={
+            <MapPage
+              properties={properties}
+              favorites={favorites}
+              compareList={compareList}
+              onToggleFavorite={toggleFavorite}
+              onToggleCompare={toggleCompare}
+            />
+          } />
+          <Route path="/favorites" element={
+            <FavoritesPage
+              properties={favoriteProperties}
+              favorites={favorites}
+              compareList={compareList}
+              onToggleFavorite={toggleFavorite}
+              onToggleCompare={toggleCompare}
+            />
+          } />
+          <Route path="/compare" element={
+            <ComparePage
+              properties={compareProperties}
+              onRemove={id => toggleCompare(id)}
+              onNavigate={setCurrentPage}
+            />
+          } />
+          <Route path="/network-tenants" element={<NetworkTenantsPage />} />
+          <Route path="/object/:slug" element={
+            <PropertyPage
+              favorites={favorites}
+              compareList={compareList}
+              onToggleFavorite={toggleFavorite}
+              onToggleCompare={toggleCompare}
+            />
+          } />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
       </main>
 
       <Footer onLogin={() => setView('login')} setCurrentPage={setCurrentPage} />
