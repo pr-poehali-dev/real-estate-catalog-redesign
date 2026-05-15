@@ -15,6 +15,7 @@ export default function ListingsAdmin() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiTagsLoading, setAiTagsLoading] = useState(false);
+  const [aiSeoLoading, setAiSeoLoading] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const load = () => {
@@ -94,6 +95,26 @@ export default function ListingsAdmin() {
     }
   };
 
+  const generateSeo = async () => {
+    if (!editing) return;
+    setAiSeoLoading(true);
+    try {
+      const dealLabel = (editing.deal === 'rent' ? 'аренда' : editing.deal === 'business' ? 'готовый бизнес' : 'продажа');
+      const ctx = `Название: ${editing.title || ''}. Тип: ${editing.category || ''}. Сделка: ${dealLabel}. Город: ${editing.city || 'Краснодар'}. Район: ${editing.district || ''}. Адрес: ${editing.address || ''}. Площадь: ${editing.area || 0} м². Цена: ${editing.price || 0} ₽. Описание: ${editing.description || ''}`;
+      const r = await aiApi.ask('seo_listing', ctx);
+      const txt = r.text || '';
+      const titleMatch = txt.match(/TITLE:\s*(.+)/i);
+      const descMatch = txt.match(/DESCRIPTION:\s*([\s\S]+)/i);
+      const seo_title = (titleMatch ? titleMatch[1] : '').trim().replace(/^["«]|["»]$/g, '');
+      const seo_description = (descMatch ? descMatch[1] : '').trim().replace(/^["«]|["»]$/g, '').slice(0, 200);
+      setEditing({ ...editing, seo_title, seo_description });
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : 'Ошибка');
+    } finally {
+      setAiSeoLoading(false);
+    }
+  };
+
   if (loading) return <div>Загрузка...</div>;
 
   return (
@@ -118,8 +139,10 @@ export default function ListingsAdmin() {
           purposes={purposes}
           aiLoading={aiLoading}
           aiTagsLoading={aiTagsLoading}
+          aiSeoLoading={aiSeoLoading}
           onDescribe={aiDescribe}
           onGenerateTags={generateTags}
+          onGenerateSeo={generateSeo}
           onClose={() => { setEditing(null); setPhotos([]); }}
           onSave={save}
         />

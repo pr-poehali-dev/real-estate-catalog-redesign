@@ -15,15 +15,18 @@ interface Props {
   purposes: Purpose[];
   aiLoading: boolean;
   aiTagsLoading: boolean;
+  aiSeoLoading: boolean;
   onDescribe: () => void;
   onGenerateTags: () => void;
+  onGenerateSeo: () => void;
   onClose: () => void;
   onSave: () => void;
 }
 
 export default function ListingEditor({
   editing, setEditing, photos, setPhotos, cities, purposes,
-  aiLoading, aiTagsLoading, onDescribe, onGenerateTags, onClose, onSave,
+  aiLoading, aiTagsLoading, aiSeoLoading,
+  onDescribe, onGenerateTags, onGenerateSeo, onClose, onSave,
 }: Props) {
   return (
     <div className="fixed inset-0 bg-black/40 z-40 flex items-center justify-center p-4">
@@ -241,6 +244,44 @@ export default function ListingEditor({
                   onChange={e => setEditing({ ...editing, export_cian: e.target.checked })} />
                 ЦИАН
               </label>
+            </div>
+          </div>
+
+          <div className="space-y-2 border-t border-border pt-4">
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-semibold flex items-center gap-1.5">
+                <Icon name="Search" size={14} /> SEO для поисковых систем
+              </div>
+              <button type="button" onClick={onGenerateSeo} disabled={aiSeoLoading}
+                className="text-xs text-brand-orange hover:underline inline-flex items-center gap-1">
+                <Icon name="Sparkles" size={12} />
+                {aiSeoLoading ? 'Генерация...' : 'Сгенерировать ИИ'}
+              </button>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">SEO Title (до 70 символов)</label>
+              <input className="w-full px-3 py-2 border rounded-lg"
+                maxLength={120}
+                placeholder="Аренда офиса 120 м² в центре Краснодара | BIZNEST"
+                value={editing.seo_title || ''}
+                onChange={e => setEditing({ ...editing, seo_title: e.target.value })} />
+              <div className="text-[11px] text-muted-foreground mt-0.5">
+                {(editing.seo_title || '').length}/70 символов
+              </div>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">SEO Description (до 160 символов)</label>
+              <textarea rows={2} className="w-full px-3 py-2 border rounded-lg"
+                maxLength={250}
+                placeholder="Светлый офис 120 м² с евроремонтом в БЦ на ул. Красной. Парковка, охрана 24/7..."
+                value={editing.seo_description || ''}
+                onChange={e => setEditing({ ...editing, seo_description: e.target.value })} />
+              <div className="text-[11px] text-muted-foreground mt-0.5">
+                {(editing.seo_description || '').length}/160 символов
+              </div>
+            </div>
+            <div className="text-[11px] text-muted-foreground">
+              Если поля пустые — поисковики возьмут текст из названия и описания объекта.
             </div>
           </div>
 

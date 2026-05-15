@@ -32,6 +32,9 @@ export interface Listing {
   export_cian: boolean;
   created_at: string;
   updated_at: string;
+  slug: string | null;
+  seo_title: string | null;
+  seo_description: string | null;
 }
 
 export interface City { id: number; name: string; is_active: boolean }
@@ -61,6 +64,7 @@ export const empty: Partial<Listing> = {
   purpose: '', condition: '', parking: 'none', entrance: 'street',
   floor: null, total_floors: null, video_url: '', video_type: '',
   use_watermark: true, export_yandex: false, export_avito: false, export_cian: false,
+  slug: null, seo_title: '', seo_description: '',
 };
 
 export const fmtDate = (s: string | null) => {

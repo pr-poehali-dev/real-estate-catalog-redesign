@@ -15,12 +15,15 @@ export default function Breadcrumbs({ items }: Props) {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
-    itemListElement: items.map((c, i) => ({
-      '@type': 'ListItem',
-      position: i + 1,
-      name: c.label,
-      item: c.to ? origin + c.to : undefined,
-    })),
+    itemListElement: items.map((c, i) => {
+      const node: Record<string, unknown> = {
+        '@type': 'ListItem',
+        position: i + 1,
+        name: c.label,
+      };
+      if (c.to) node.item = origin + c.to;
+      return node;
+    }),
   };
 
   return (
