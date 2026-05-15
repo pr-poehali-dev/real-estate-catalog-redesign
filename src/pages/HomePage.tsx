@@ -28,19 +28,11 @@ const CATEGORIES = [
   { icon: 'Building2', label: 'Офисы', type: 'office', gradient: 'from-blue-500 to-indigo-600' },
   { icon: 'ShoppingBag', label: 'Торговля', type: 'retail', gradient: 'from-orange-500 to-rose-500' },
   { icon: 'Warehouse', label: 'Склады', type: 'warehouse', gradient: 'from-slate-500 to-zinc-700' },
-  { icon: 'UtensilsCrossed', label: 'Рестораны', type: 'restaurant', gradient: 'from-amber-500 to-red-500' },
+  { icon: 'UtensilsCrossed', label: 'Общественное питание', type: 'restaurant', gradient: 'from-amber-500 to-red-500' },
+  { icon: 'BedDouble', label: 'Отели', type: 'hotel', gradient: 'from-pink-500 to-fuchsia-600' },
   { icon: 'Briefcase', label: 'Готовый бизнес', type: 'business', gradient: 'from-violet-500 to-purple-700' },
-  { icon: 'Factory', label: 'Производство', type: 'production', gradient: 'from-teal-500 to-emerald-700' },
+  { icon: 'TrendingUp', label: 'ГАБ', type: 'gab', gradient: 'from-emerald-500 to-teal-600' },
 ];
-
-const declOf = (n: number) => {
-  const mod10 = n % 10;
-  const mod100 = n % 100;
-  if (mod100 >= 11 && mod100 <= 14) return 'объектов';
-  if (mod10 === 1) return 'объект';
-  if (mod10 >= 2 && mod10 <= 4) return 'объекта';
-  return 'объектов';
-};
 
 export default function HomePage({ properties, favorites, compareList, onToggleFavorite, onToggleCompare, onNavigate }: HomePageProps) {
   const { settings } = useSettings();
@@ -200,7 +192,7 @@ export default function HomePage({ properties, favorites, compareList, onToggleF
       {/* Categories — компактнее */}
       <section className="py-6 bg-background">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-2 md:gap-3">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-2 md:gap-3">
             {CATEGORIES.map((cat, i) => (
               <button
                 key={cat.type}

@@ -3,7 +3,7 @@ import Icon from '@/components/ui/icon';
 import {
   Listing, City, Purpose,
   CATS, DEALS, CONDITIONS, PARKING, ENTRANCE,
-  fmtDate, perM2, detectVideoType,
+  fmtDate, perM2,
 } from './types';
 
 interface Props {

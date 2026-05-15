@@ -16,9 +16,11 @@ const TYPE_LABELS: Record<string, string> = {
   office: 'Офис',
   retail: 'Торговля',
   warehouse: 'Склад',
-  restaurant: 'Ресторан',
+  restaurant: 'Общепит',
   business: 'Бизнес',
   production: 'Производство',
+  hotel: 'Отель',
+  gab: 'ГАБ',
 };
 
 const DEAL_LABELS: Record<string, string> = {

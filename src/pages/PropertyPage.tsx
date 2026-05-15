@@ -6,10 +6,12 @@ import { useSettings } from '@/contexts/SettingsContext';
 import Icon from '@/components/ui/icon';
 import { formatPrice } from '@/components/PropertyCard';
 import Breadcrumbs from '@/components/Breadcrumbs';
+import YandexMap from '@/components/YandexMap';
 
 const TYPE_LABELS: Record<string, string> = {
   office: 'Офис', retail: 'Торговля', warehouse: 'Склад',
-  restaurant: 'Ресторан', business: 'Бизнес', production: 'Производство',
+  restaurant: 'Общественное питание', business: 'Бизнес', production: 'Производство',
+  hotel: 'Отель', gab: 'ГАБ',
 };
 const DEAL_LABELS: Record<string, string> = {
   sale: 'Продажа', rent: 'Аренда', business: 'Готовый бизнес',
@@ -259,6 +261,29 @@ export default function PropertyPage({ onToggleFavorite, onToggleCompare, favori
                   className="inline-flex items-center gap-2 text-brand-blue hover:underline text-sm">
                   Открыть видео <Icon name="ExternalLink" size={14} />
                 </a>
+              </div>
+            )}
+
+            {(item.lat && item.lng) && (
+              <div className="bg-white rounded-2xl p-5 shadow-sm">
+                <div className="font-display font-700 text-lg mb-3 flex items-center gap-2">
+                  <Icon name="Map" size={18} /> Расположение на карте
+                </div>
+                <YandexMap
+                  points={[{
+                    id: item.id,
+                    lat: item.lat,
+                    lng: item.lng,
+                    title: item.title,
+                    caption: item.address,
+                  }]}
+                  zoom={15}
+                  height="320px"
+                />
+                <div className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                  <Icon name="MapPin" size={12} />
+                  {[item.city || 'Краснодар', item.district, item.address].filter(Boolean).join(', ')}
+                </div>
               </div>
             )}
           </div>

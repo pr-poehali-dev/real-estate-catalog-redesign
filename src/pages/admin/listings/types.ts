@@ -42,7 +42,8 @@ export interface Purpose { id: number; name: string; slug: string }
 
 export const CATS = [
   ['office', 'Офис'], ['retail', 'Торговля'], ['warehouse', 'Склад'],
-  ['restaurant', 'Ресторан'], ['business', 'Бизнес'], ['production', 'Производство'],
+  ['restaurant', 'Общественное питание'], ['hotel', 'Отель'],
+  ['business', 'Бизнес'], ['gab', 'ГАБ'], ['production', 'Производство'],
 ];
 export const DEALS: [string, string, string][] = [
   ['sale', 'Продажа', 'bg-emerald-100 text-emerald-700'],
