@@ -104,48 +104,49 @@ export default function HomePage({ properties, favorites, compareList, onToggleF
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(orgLd) }}
       />
-      {/* Hero */}
-      <section className="hero-bg text-white py-20 md:py-28">
+      {/* Hero — компактный */}
+      <section className="hero-bg text-white py-10 md:py-14">
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-sm mb-6 animate-fade-in-up">
-              <span className="w-2 h-2 rounded-full bg-brand-orange animate-pulse" />
-              <span>Интеллектуальный подбор с ИИ</span>
-            </div>
-            <h1 className="font-display font-900 text-4xl md:text-6xl leading-tight mb-5 animate-fade-in-up stagger-1">
+            <h1 className="font-display font-900 text-3xl md:text-4xl leading-tight mb-3 animate-fade-in-up stagger-1">
               Коммерческая недвижимость и готовый бизнес
             </h1>
-            <p className="text-white/75 text-lg md:text-xl mb-8 animate-fade-in-up stagger-2 max-w-xl">
-              Более {totalCount} объектов в {mainCity}е и пригороде. Офисы, склады, торговые площади и работающий бизнес под ключ.
+            <p className="text-white/75 text-base mb-5 animate-fade-in-up stagger-2 max-w-xl">
+              Более {totalCount} объектов в {mainCity}е и пригороде. Подбор с ИИ за 2 минуты.
             </p>
 
             {/* Search bar */}
-            <div className="flex gap-3 animate-fade-in-up stagger-3">
-              <div className="flex-1 flex items-center gap-3 bg-white/10 border border-white/25 rounded-xl px-4 py-3 backdrop-blur-sm">
-                <Icon name="Search" size={20} className="text-white/60 flex-shrink-0" />
+            <div className="flex gap-2 animate-fade-in-up stagger-3">
+              <div className="flex-1 flex items-center gap-2 bg-white/10 border border-white/25 rounded-xl px-3 py-2 backdrop-blur-sm">
+                <Icon name="Search" size={18} className="text-white/60 flex-shrink-0" />
                 <input
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   placeholder="Район, улица, тип объекта..."
-                  className="bg-transparent text-white placeholder:text-white/50 outline-none w-full text-base"
+                  className="bg-transparent text-white placeholder:text-white/50 outline-none w-full text-sm"
                 />
               </div>
               <button
-                onClick={() => onNavigate('catalog')}
-                className="btn-orange text-white px-6 py-3 rounded-xl font-semibold font-display text-base flex-shrink-0"
+                onClick={() => navigate(`/catalog${searchQuery ? `?search=${encodeURIComponent(searchQuery)}` : ''}`)}
+                className="btn-orange text-white px-5 py-2 rounded-xl font-semibold font-display text-sm flex-shrink-0"
               >
                 Найти
               </button>
             </div>
 
             {/* Quick filters */}
-            <div className="flex flex-wrap gap-2 mt-4 animate-fade-in-up stagger-4">
-              {['Продажа', 'Аренда', 'Готовый бизнес', 'ЦАО', 'до 10 млн ₽'].map(tag => (
+            <div className="flex flex-wrap gap-1.5 mt-3 animate-fade-in-up stagger-4">
+              {[
+                ['Продажа', '/catalog?deal=sale'],
+                ['Аренда', '/catalog?deal=rent'],
+                ['Готовый бизнес', '/catalog?deal=business'],
+              ].map(([label, to]) => (
                 <button
-                  key={tag}
-                  className="px-3 py-1 rounded-full bg-white/10 border border-white/20 text-sm text-white/80 hover:bg-white/20 transition-all duration-200"
+                  key={label}
+                  onClick={() => navigate(to)}
+                  className="px-2.5 py-1 rounded-full bg-white/10 border border-white/20 text-xs text-white/85 hover:bg-white/20 transition-all duration-200"
                 >
-                  {tag}
+                  {label}
                 </button>
               ))}
             </div>
@@ -153,10 +154,10 @@ export default function HomePage({ properties, favorites, compareList, onToggleF
         </div>
       </section>
 
-      {/* Stats */}
-      <section className="bg-white border-b border-border py-6">
+      {/* Stats — компактная горизонтальная панель */}
+      <section className="bg-white border-b border-border py-3">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {STATS_VIEW.map((stat, i) => {
               const clickable = stat.deal !== null;
               const goCatalog = () => {
@@ -168,17 +169,17 @@ export default function HomePage({ properties, favorites, compareList, onToggleF
                 <Wrapper
                   key={stat.label}
                   onClick={clickable ? goCatalog : undefined}
-                  className={`flex items-center gap-3 animate-fade-in-up stagger-${i + 1} text-left ${clickable ? 'hover:bg-muted/40 -m-2 p-2 rounded-xl transition-colors cursor-pointer' : ''}`}
+                  className={`flex items-center gap-2.5 animate-fade-in-up stagger-${i + 1} text-left ${clickable ? 'hover:bg-muted/40 p-1.5 rounded-lg transition-colors cursor-pointer' : 'p-1.5'}`}
                 >
-                  <div className="w-10 h-10 rounded-xl bg-brand-blue/10 flex items-center justify-center flex-shrink-0">
-                    <Icon name={stat.icon} size={20} className="text-brand-blue" />
+                  <div className="w-8 h-8 rounded-lg bg-brand-blue/10 flex items-center justify-center flex-shrink-0">
+                    <Icon name={stat.icon} size={16} className="text-brand-blue" />
                   </div>
                   <div>
-                    <div className="font-display font-800 text-2xl text-brand-blue leading-none flex items-center gap-1">
+                    <div className="font-display font-800 text-lg text-brand-blue leading-none flex items-center gap-1">
                       {stat.value}
-                      {clickable && <Icon name="ArrowRight" size={14} className="text-brand-blue/60" />}
+                      {clickable && <Icon name="ArrowRight" size={12} className="text-brand-blue/60" />}
                     </div>
-                    <div className="text-xs text-muted-foreground mt-0.5">{stat.label}</div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5">{stat.label}</div>
                   </div>
                 </Wrapper>
               );
@@ -187,33 +188,24 @@ export default function HomePage({ properties, favorites, compareList, onToggleF
         </div>
       </section>
 
-      {/* Categories */}
-      <section className="py-12 bg-background">
+      {/* Categories — компактнее */}
+      <section className="py-6 bg-background">
         <div className="container mx-auto px-4">
-          <div className="flex items-end justify-end mb-8">
-            <button
-              onClick={() => onNavigate('catalog')}
-              className="hidden md:flex items-center gap-2 text-brand-blue font-semibold text-sm hover:gap-3 transition-all duration-200"
-            >
-              Все объекты <Icon name="ArrowRight" size={16} />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-2 md:gap-3">
             {CATEGORIES.map((cat, i) => (
               <button
                 key={cat.type}
                 onClick={() => navigate(`/catalog?type=${cat.type}`)}
-                className={`group relative flex flex-col items-center gap-3 p-5 bg-white rounded-2xl border border-border hover:border-transparent hover:shadow-xl hover:-translate-y-1 transition-all duration-300 animate-fade-in-up stagger-${i + 1} overflow-hidden`}
+                className={`group relative flex flex-col items-center gap-2 p-3 bg-white rounded-xl border border-border hover:border-transparent hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 animate-fade-in-up stagger-${i + 1} overflow-hidden`}
               >
                 <div className={`absolute inset-0 bg-gradient-to-br ${cat.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
-                <div className={`relative w-14 h-14 rounded-2xl bg-gradient-to-br ${cat.gradient} flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:scale-110 transition-all duration-300`}>
-                  <Icon name={cat.icon} size={26} className="text-white" />
+                <div className={`relative w-10 h-10 rounded-xl bg-gradient-to-br ${cat.gradient} flex items-center justify-center shadow-md group-hover:scale-110 transition-all duration-300`}>
+                  <Icon name={cat.icon} size={20} className="text-white" />
                 </div>
                 <div className="text-center relative">
-                  <div className="font-display font-700 text-sm text-foreground group-hover:text-white transition-colors">{cat.label}</div>
-                  <div className="text-xs text-muted-foreground group-hover:text-white/80 mt-0.5 transition-colors">
-                    {categoryCount(cat.type)} {declOf(categoryCount(cat.type))}
+                  <div className="font-display font-700 text-xs text-foreground group-hover:text-white transition-colors leading-tight">{cat.label}</div>
+                  <div className="text-[10px] text-muted-foreground group-hover:text-white/80 mt-0.5 transition-colors">
+                    {categoryCount(cat.type)}
                   </div>
                 </div>
               </button>
@@ -223,18 +215,18 @@ export default function HomePage({ properties, favorites, compareList, onToggleF
       </section>
 
       {/* Новые объекты */}
-      <section className="py-12 bg-muted/40">
+      <section className="py-6 bg-muted/40">
         <div className="container mx-auto px-4">
-          <div className="flex items-end justify-end mb-8">
+          <div className="flex items-end justify-end mb-3">
             <button
               onClick={() => onNavigate('catalog')}
-              className="hidden md:flex items-center gap-2 text-brand-blue font-semibold text-sm hover:gap-3 transition-all duration-200"
+              className="flex items-center gap-1.5 text-brand-blue font-semibold text-xs hover:gap-2 transition-all duration-200"
             >
-              Смотреть все <Icon name="ArrowRight" size={16} />
+              Смотреть все <Icon name="ArrowRight" size={14} />
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {newObjects.map((property, i) => (
               <PropertyCard
                 key={property.id}
@@ -243,44 +235,34 @@ export default function HomePage({ properties, favorites, compareList, onToggleF
                 isCompare={compareList.includes(property.id)}
                 onToggleFavorite={onToggleFavorite}
                 onToggleCompare={onToggleCompare}
-                style={{ animationDelay: `${i * 0.1}s` }}
+                style={{ animationDelay: `${i * 0.08}s` }}
               />
             ))}
-          </div>
-
-          <div className="mt-8 text-center md:hidden">
-            <button
-              onClick={() => onNavigate('catalog')}
-              className="btn-blue text-white px-8 py-3 rounded-xl font-semibold font-display"
-            >
-              Смотреть все объекты
-            </button>
           </div>
         </div>
       </section>
 
       <ClientLeadsSection />
 
-      {/* AI Banner */}
-      <section className="py-12">
+      {/* AI Banner — компактный */}
+      <section className="py-6">
         <div className="container mx-auto px-4">
-          <div className="bg-gradient-to-r from-brand-blue to-blue-700 rounded-3xl p-8 md:p-12 relative overflow-hidden">
-            <div className="absolute right-0 top-0 w-64 h-64 opacity-10">
+          <div className="bg-gradient-to-r from-brand-blue to-blue-700 rounded-2xl p-5 md:p-6 relative overflow-hidden">
+            <div className="absolute right-0 top-0 w-48 h-48 opacity-10">
               <div className="w-full h-full rounded-full bg-white blur-3xl" />
             </div>
-            <div className="relative z-10 max-w-xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 text-white/90 text-sm mb-4">
-                <Icon name="Sparkles" size={14} />
-                ИИ-помощник
+            <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div>
+                <h2 className="font-display font-800 text-lg md:text-xl text-white mb-1 flex items-center gap-2">
+                  <Icon name="Sparkles" size={18} />
+                  Подберём объект за 2 минуты с ИИ
+                </h2>
+                <p className="text-white/75 text-sm">
+                  Опишите задачу — найдём варианты и рассчитаем окупаемость.
+                </p>
               </div>
-              <h2 className="font-display font-800 text-2xl md:text-4xl text-white mb-4">
-                Подберём объект за 2 минуты
-              </h2>
-              <p className="text-white/75 text-base mb-6">
-                Опишите задачу — ИИ найдёт подходящие варианты, рассчитает окупаемость и подготовит аналитику по рынку.
-              </p>
-              <button className="btn-orange text-white px-6 py-3 rounded-xl font-semibold font-display text-base inline-flex items-center gap-2">
-                <Icon name="Sparkles" size={18} />
+              <button className="btn-orange text-white px-5 py-2.5 rounded-xl font-semibold font-display text-sm inline-flex items-center gap-2 flex-shrink-0">
+                <Icon name="Sparkles" size={16} />
                 Спросить ИИ
               </button>
             </div>

@@ -132,7 +132,7 @@ export default function PropertyPage({ onToggleFavorite, onToggleCompare, favori
 
   const dealLabel = DEAL_LABELS[item.deal] || item.deal;
   const typeLabel = TYPE_LABELS[item.type] || item.type;
-  const productLd = {
+  const productLd: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: item.title,
@@ -144,7 +144,7 @@ export default function PropertyPage({ onToggleFavorite, onToggleCompare, favori
       priceCurrency: 'RUB',
       price: item.price,
       availability: 'https://schema.org/InStock',
-      url: typeof window !== 'undefined' ? window.location.href : undefined,
+      url: typeof window !== 'undefined' ? window.location.href : '',
       seller: {
         '@type': 'Organization',
         name: settings.company_name || 'BIZNEST',

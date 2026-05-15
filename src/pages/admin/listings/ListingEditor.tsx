@@ -16,26 +16,38 @@ interface Props {
   aiLoading: boolean;
   aiTagsLoading: boolean;
   aiSeoLoading: boolean;
+  aiAllLoading: boolean;
   onDescribe: () => void;
   onGenerateTags: () => void;
   onGenerateSeo: () => void;
+  onGenerateAll: () => void;
   onClose: () => void;
   onSave: () => void;
 }
 
 export default function ListingEditor({
   editing, setEditing, photos, setPhotos, cities, purposes,
-  aiLoading, aiTagsLoading, aiSeoLoading,
-  onDescribe, onGenerateTags, onGenerateSeo, onClose, onSave,
+  aiLoading, aiTagsLoading, aiSeoLoading, aiAllLoading,
+  onDescribe, onGenerateTags, onGenerateSeo, onGenerateAll, onClose, onSave,
 }: Props) {
   return (
     <div className="fixed inset-0 bg-black/40 z-40 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-5 border-b border-border flex justify-between items-center sticky top-0 bg-white z-10">
+        <div className="p-5 border-b border-border flex justify-between items-center sticky top-0 bg-white z-10 gap-3">
           <div className="font-display font-700 text-lg">
             {editing.id ? 'Редактировать' : 'Новый объект'}
           </div>
-          <button onClick={onClose}><Icon name="X" size={20} /></button>
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={onGenerateAll} disabled={aiAllLoading}
+              title="Сгенерировать описание, теги и SEO одним кликом"
+              className="btn-orange text-white px-3 py-1.5 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 disabled:opacity-60">
+              <Icon name={aiAllLoading ? 'Loader2' : 'Sparkles'} size={13} className={aiAllLoading ? 'animate-spin' : ''} />
+              {aiAllLoading ? 'Генерация...' : 'Сгенерировать всё'}
+            </button>
+            <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+              <Icon name="X" size={20} />
+            </button>
+          </div>
         </div>
         <div className="p-5 space-y-4">
           <input className="w-full px-3 py-2 border rounded-lg" placeholder="Название"

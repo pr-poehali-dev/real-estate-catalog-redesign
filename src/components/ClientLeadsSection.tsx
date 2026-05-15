@@ -56,10 +56,10 @@ export default function ClientLeadsSection() {
   if (!leads.length) return null;
 
   return (
-    <section className="py-12 bg-white">
+    <section className="py-6 bg-white">
       <div className="container mx-auto px-4">
-        <div className="flex items-end justify-between mb-8">
-          <p className="text-sm text-muted-foreground max-w-xl">
+        <div className="flex items-end justify-between mb-3">
+          <p className="text-xs text-muted-foreground max-w-xl">
             Есть подходящий объект? Предложите его клиенту — заявка попадёт нашему менеджеру.
           </p>
         </div>

@@ -16,6 +16,7 @@ export default function ListingsAdmin() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiTagsLoading, setAiTagsLoading] = useState(false);
   const [aiSeoLoading, setAiSeoLoading] = useState(false);
+  const [aiAllLoading, setAiAllLoading] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const load = () => {
@@ -115,6 +116,38 @@ export default function ListingsAdmin() {
     }
   };
 
+  const generateAll = async () => {
+    if (!editing) return;
+    setAiAllLoading(true);
+    try {
+      const dealLabel = (editing.deal === 'rent' ? 'аренда' : editing.deal === 'business' ? 'готовый бизнес' : 'продажа');
+      // 1. Описание
+      const descPrompt = `Город: ${editing.city || 'Краснодар'}, категория: ${editing.category}, назначение: ${editing.purpose || '-'}, площадь: ${editing.area} м², адрес: ${editing.address || '-'}, цена: ${editing.price}`;
+      const descRes = await aiApi.ask('describe', descPrompt);
+      const description = descRes.text || editing.description || '';
+
+      // 2. Теги (на основе свежесгенерированного описания)
+      const tagsCtx = `Название: ${editing.title}, категория: ${editing.category}, назначение: ${editing.purpose || ''}, состояние: ${editing.condition || ''}, парковка: ${editing.parking || ''}, описание: ${description}`;
+      const tagsRes = await aiApi.ask('auto_tags', tagsCtx);
+      const tags = (tagsRes.text || '').replace(/\n/g, ',').replace(/\s+,/g, ',');
+
+      // 3. SEO
+      const seoCtx = `Название: ${editing.title || ''}. Тип: ${editing.category || ''}. Сделка: ${dealLabel}. Город: ${editing.city || 'Краснодар'}. Район: ${editing.district || ''}. Адрес: ${editing.address || ''}. Площадь: ${editing.area || 0} м². Цена: ${editing.price || 0} ₽. Описание: ${description}`;
+      const seoRes = await aiApi.ask('seo_listing', seoCtx);
+      const txt = seoRes.text || '';
+      const titleMatch = txt.match(/TITLE:\s*(.+)/i);
+      const descMatch = txt.match(/DESCRIPTION:\s*([\s\S]+)/i);
+      const seo_title = (titleMatch ? titleMatch[1] : '').trim().replace(/^["«]|["»]$/g, '');
+      const seo_description = (descMatch ? descMatch[1] : '').trim().replace(/^["«]|["»]$/g, '').slice(0, 200);
+
+      setEditing({ ...editing, description, tags, seo_title, seo_description });
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : 'Ошибка ИИ');
+    } finally {
+      setAiAllLoading(false);
+    }
+  };
+
   if (loading) return <div>Загрузка...</div>;
 
   return (
@@ -140,9 +173,11 @@ export default function ListingsAdmin() {
           aiLoading={aiLoading}
           aiTagsLoading={aiTagsLoading}
           aiSeoLoading={aiSeoLoading}
+          aiAllLoading={aiAllLoading}
           onDescribe={aiDescribe}
           onGenerateTags={generateTags}
           onGenerateSeo={generateSeo}
+          onGenerateAll={generateAll}
           onClose={() => { setEditing(null); setPhotos([]); }}
           onSave={save}
         />

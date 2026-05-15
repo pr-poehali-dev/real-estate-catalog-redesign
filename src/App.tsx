@@ -14,6 +14,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import CompareBar from './components/CompareBar';
 import AnalyticsLoader from './components/AnalyticsLoader';
+import ScrollToTop from './components/ScrollToTop';
 import { fetchListings } from './lib/api';
 import { useAuth } from './contexts/AuthContext';
 
@@ -159,6 +160,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background font-body">
+      <ScrollToTop />
       <AnalyticsLoader />
       <Navbar
         currentPage={currentPage}
