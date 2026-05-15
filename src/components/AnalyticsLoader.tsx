@@ -1,14 +1,6 @@
 import { useEffect } from 'react';
 import { useSettings } from '@/contexts/SettingsContext';
 
-declare global {
-  interface Window {
-    ym?: (...args: unknown[]) => void;
-    gtag?: (...args: unknown[]) => void;
-    dataLayer?: unknown[];
-  }
-}
-
 /**
  * Подгружает счётчики Яндекс.Метрики и Google Analytics
  * из настроек админки (yandex_metrika_id / google_analytics_id).
@@ -64,9 +56,9 @@ export default function AnalyticsLoader() {
     document.head.appendChild(s);
 
     window.dataLayer = window.dataLayer || [];
-    function gtag(...args: unknown[]) {
+    const gtag = (...args: unknown[]) => {
       (window.dataLayer as unknown[]).push(args);
-    }
+    };
     window.gtag = gtag as typeof window.gtag;
     gtag('js', new Date());
     gtag('config', gaId);
