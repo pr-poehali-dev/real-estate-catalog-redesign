@@ -1,0 +1,10 @@
+{
+  "tests": [
+    {
+      "name": "Получить Яндекс XML",
+      "method": "GET",
+      "path": "/?feed=yandex",
+      "expectedStatus": 200
+    }
+  ]
+}

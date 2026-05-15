@@ -1,0 +1,11 @@
+{
+  "tests": [
+    {
+      "name": "Без авторизации",
+      "method": "POST",
+      "path": "/",
+      "body": {"file_base64": "x", "filename": "t.jpg", "kind": "photo"},
+      "expectedStatus": 401
+    }
+  ]
+}
