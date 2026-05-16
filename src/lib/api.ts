@@ -18,12 +18,18 @@ interface ApiListing {
   total_floors: number | null;
   address: string;
   district: string;
-  lat: number;
-  lng: number;
+  lat: number | string | null;
+  lng: number | string | null;
   image: string;
   tags: string[];
   is_hot: boolean;
   is_new: boolean;
+}
+
+function toNum(v: unknown): number {
+  if (v === null || v === undefined || v === '') return 0;
+  const n = typeof v === 'number' ? v : Number(v);
+  return Number.isFinite(n) ? n : 0;
 }
 
 function mapListing(item: ApiListing): Property {
@@ -44,8 +50,8 @@ function mapListing(item: ApiListing): Property {
     image: item.image,
     tags: item.tags || [],
     description: item.description,
-    lat: item.lat,
-    lng: item.lng,
+    lat: toNum(item.lat),
+    lng: toNum(item.lng),
     isHot: item.is_hot,
     isNew: item.is_new,
   };

@@ -115,9 +115,9 @@ export default function YandexMap({
     if (!map || !window.ymaps) return;
     map.geoObjects.removeAll();
 
-    const valid = points.filter(p =>
-      typeof p.lat === 'number' && typeof p.lng === 'number' && !isNaN(p.lat) && !isNaN(p.lng)
-    );
+    const valid = points
+      .map(p => ({ ...p, lat: Number(p.lat), lng: Number(p.lng) }))
+      .filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lng) && p.lat !== 0 && p.lng !== 0);
 
     valid.forEach(p => {
       const placemark = new window.ymaps.Placemark(

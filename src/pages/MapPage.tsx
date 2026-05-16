@@ -38,7 +38,7 @@ export default function MapPage({
 
   const points = useMemo(
     () => filtered
-      .filter(p => p.lat && p.lng)
+      .filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lng) && p.lat !== 0 && p.lng !== 0)
       .map(p => ({
         id: p.id,
         lat: p.lat,
