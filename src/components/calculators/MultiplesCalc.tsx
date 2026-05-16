@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NumberField, ResultRow, fmtRub } from './utils';
 
 interface Props {
@@ -10,6 +10,8 @@ interface Props {
 export default function MultiplesCalc({ revenueYear, ebitdaYear }: Props) {
   const [rev, setRev] = useState(revenueYear);
   const [ebitda, setEbitda] = useState(ebitdaYear);
+  useEffect(() => { setRev(revenueYear); }, [revenueYear]);
+  useEffect(() => { setEbitda(ebitdaYear); }, [ebitdaYear]);
   const [pe, setPe] = useState(6);
   const [evEbitda, setEvEbitda] = useState(5);
   const [ps, setPs] = useState(1.2);

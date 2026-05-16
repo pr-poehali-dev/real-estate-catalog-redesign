@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { NumberField, ResultRow, fmtRub, fmtMonths, fmtPct } from './utils';
 
 interface Props {
@@ -12,13 +12,17 @@ export default function CashflowCalc({ price, monthlyIncome, monthlyExpenses }: 
   const [expenses, setExpenses] = useState(monthlyExpenses);
   const [invest, setInvest] = useState(price);
 
+  useEffect(() => { setIncome(monthlyIncome); }, [monthlyIncome]);
+  useEffect(() => { setExpenses(monthlyExpenses); }, [monthlyExpenses]);
+  useEffect(() => { setInvest(price); }, [price]);
+
   const profit = income - expenses;
   const yearProfit = profit * 12;
   const margin = income > 0 ? (profit / income) * 100 : 0;
   const payback = profit > 0 ? invest / profit : Infinity;
   const roiYear = invest > 0 ? (yearProfit / invest) * 100 : 0;
 
-  return useMemo(() => (
+  return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <NumberField label="Инвестиции, ₽" value={invest} onChange={setInvest} step={100000} />
@@ -33,5 +37,5 @@ export default function CashflowCalc({ price, monthlyIncome, monthlyExpenses }: 
         <ResultRow label="Окупаемость" value={fmtMonths(payback)} color="orange" />
       </div>
     </div>
-  ), [invest, income, expenses, profit, yearProfit, margin, payback, roiYear]);
+  );
 }

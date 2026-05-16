@@ -7,6 +7,7 @@ import Icon from '@/components/ui/icon';
 import { formatPrice } from '@/components/PropertyCard';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import YandexMap from '@/components/YandexMap';
+import PropertyCalculators from '@/components/calculators/PropertyCalculators';
 
 const TYPE_LABELS: Record<string, string> = {
   office: 'Офис', retail: 'Торговля', warehouse: 'Склад',
@@ -286,6 +287,16 @@ export default function PropertyPage({ onToggleFavorite, onToggleCompare, favori
                 </div>
               </div>
             )}
+
+            <PropertyCalculators
+              price={item.price}
+              area={item.area}
+              deal={item.deal}
+              type={item.type}
+              payback={item.payback}
+              profit={item.profit}
+              pricePerM2={item.pricePerM2}
+            />
           </div>
 
           {/* Правая часть: цена + форма */}

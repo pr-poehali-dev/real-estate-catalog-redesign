@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NumberField, ResultRow, fmtRub, fmtPct } from './utils';
 
 interface Props {
@@ -8,6 +8,7 @@ interface Props {
 // Метод дисконтированных денежных потоков
 export default function DcfCalc({ yearCashFlow }: Props) {
   const [cf, setCf] = useState(yearCashFlow);
+  useEffect(() => { setCf(yearCashFlow); }, [yearCashFlow]);
   const [growth, setGrowth] = useState(5);
   const [discount, setDiscount] = useState(15);
   const [years, setYears] = useState(5);

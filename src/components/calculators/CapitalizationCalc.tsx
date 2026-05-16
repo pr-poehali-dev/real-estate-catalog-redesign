@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NumberField, ResultRow, fmtRub, fmtPct } from './utils';
 
 interface Props {
@@ -8,6 +8,7 @@ interface Props {
 // Метод капитализации прибыли
 export default function CapitalizationCalc({ yearProfit }: Props) {
   const [profit, setProfit] = useState(yearProfit);
+  useEffect(() => { setProfit(yearProfit); }, [yearProfit]);
   const [capRate, setCapRate] = useState(15);
   const [riskFree, setRiskFree] = useState(8);
   const [riskPremium, setRiskPremium] = useState(7);
