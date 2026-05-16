@@ -47,6 +47,11 @@ export interface Property {
   monthlyRent?: number;
   yearlyRent?: number;
   purpose?: string;
+  finishing?: string;
+  ceilingHeight?: number;
+  electricityKw?: number;
+  utilities?: string;
+  roadLine?: string;
 }
 
 export type Page = 'home' | 'catalog' | 'map' | 'favorites' | 'compare' | 'network-tenants';

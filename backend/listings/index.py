@@ -155,6 +155,50 @@ def handler(event: dict, context) -> dict:
                     'by_deal': by_deal,
                 })
 
+            if params.get('resource') == 'similar' and params.get('id'):
+                try:
+                    sid = int(params.get('id'))
+                except (TypeError, ValueError):
+                    return _ok({'listings': []})
+                cur.execute(
+                    "SELECT category, deal, price, district, city "
+                    "FROM t_p71821556_real_estate_catalog_.listings WHERE id = "
+                    + str(sid)
+                )
+                src = cur.fetchone()
+                if not src:
+                    return _ok({'listings': []})
+                cat = (src.get('category') or '').replace("'", "''")
+                deal = (src.get('deal') or '').replace("'", "''")
+                price = src.get('price') or 0
+                district = (src.get('district') or '').replace("'", "''")
+                price_min = int(float(price) * 0.6) if price else 0
+                price_max = int(float(price) * 1.5) if price else 0
+                base_where = (
+                    f"status = 'active' AND id <> {sid} "
+                    f"AND category = '{cat}' AND deal = '{deal}'"
+                )
+                if price:
+                    base_where += f" AND price BETWEEN {price_min} AND {price_max}"
+                order_by = (
+                    f"CASE WHEN district = '{district}' THEN 0 ELSE 1 END, "
+                    f"ABS(price - {int(price) if price else 0}), created_at DESC"
+                )
+                cur.execute(
+                    "SELECT * FROM t_p71821556_real_estate_catalog_.listings WHERE "
+                    + base_where + " ORDER BY " + order_by + " LIMIT 12"
+                )
+                rows = cur.fetchall()
+                if len(rows) < 4:
+                    # добиваем без фильтра по цене
+                    cur.execute(
+                        "SELECT * FROM t_p71821556_real_estate_catalog_.listings WHERE "
+                        f"status = 'active' AND id <> {sid} AND category = '{cat}' AND deal = '{deal}' "
+                        f"ORDER BY {order_by} LIMIT 12"
+                    )
+                    rows = cur.fetchall()
+                return _ok({'listings': [_serialize(dict(r)) for r in rows]})
+
             listing_id = params.get('id')
             if listing_id:
                 cur.execute(
@@ -247,7 +291,7 @@ def _serialize(row: dict) -> dict:
         row['tags'] = [t.strip() for t in str(row['tags']).split(',') if t.strip()]
     else:
         row['tags'] = []
-    for k in ('lat', 'lng', 'monthly_rent', 'yearly_rent'):
+    for k in ('lat', 'lng', 'monthly_rent', 'yearly_rent', 'ceiling_height', 'electricity_kw'):
         if row.get(k) is not None:
             try:
                 row[k] = float(row[k])

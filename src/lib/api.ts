@@ -29,6 +29,11 @@ interface ApiListing {
   monthly_rent?: number | null;
   yearly_rent?: number | null;
   purpose?: string | null;
+  finishing?: string | null;
+  ceiling_height?: number | null;
+  electricity_kw?: number | null;
+  utilities?: string | null;
+  road_line?: string | null;
 }
 
 function toNum(v: unknown): number {
@@ -64,6 +69,11 @@ function mapListing(item: ApiListing): Property {
     monthlyRent: item.monthly_rent ?? undefined,
     yearlyRent: item.yearly_rent ?? undefined,
     purpose: item.purpose ?? undefined,
+    finishing: item.finishing ?? undefined,
+    ceilingHeight: item.ceiling_height ?? undefined,
+    electricityKw: item.electricity_kw ?? undefined,
+    utilities: item.utilities ?? undefined,
+    roadLine: item.road_line ?? undefined,
   };
 }
 
@@ -72,6 +82,17 @@ export async function fetchListings(): Promise<Property[]> {
   if (!res.ok) throw new Error('Не удалось загрузить объекты');
   const data = await res.json();
   return (data.listings || []).map(mapListing);
+}
+
+export async function fetchSimilarListings(id: number): Promise<Property[]> {
+  try {
+    const res = await fetch(`${LISTINGS_URL}?resource=similar&id=${id}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.listings || []).map(mapListing);
+  } catch {
+    return [];
+  }
 }
 
 export interface ListingDetail extends Property {

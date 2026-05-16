@@ -166,7 +166,7 @@ def _listings(cur, conn, method, rid, event, user):
     if method == 'POST':
         sql = (
             f"INSERT INTO {SCHEMA}.listings "
-            f"(title, description, category, deal, price, price_per_m2, area, payback, profit, floor, total_floors, address, district, city, lat, lng, image, images, tags, is_hot, is_new, status, owner_name, owner_phone, price_unit, purpose, condition, parking, entrance, video_url, video_type, use_watermark, export_yandex, export_avito, export_cian, tenant_name, monthly_rent, yearly_rent, author_id) VALUES ("
+            f"(title, description, category, deal, price, price_per_m2, area, payback, profit, floor, total_floors, address, district, city, lat, lng, image, images, tags, is_hot, is_new, status, owner_name, owner_phone, price_unit, purpose, condition, parking, entrance, video_url, video_type, use_watermark, export_yandex, export_avito, export_cian, tenant_name, monthly_rent, yearly_rent, finishing, ceiling_height, electricity_kw, utilities, road_line, author_id) VALUES ("
             f"{_str_or_null(body.get('title'), 255)}, {_str_or_null(body.get('description'), 5000)}, "
             f"{_str_or_null(body.get('category'), 50)}, {_str_or_null(body.get('deal'), 20)}, "
             f"{_int_or_null(body.get('price'))}, {_int_or_null(body.get('price_per_m2'))}, "
@@ -188,6 +188,9 @@ def _listings(cur, conn, method, rid, event, user):
             f"{_bool(body.get('export_avito'))}, {_bool(body.get('export_cian'))}, "
             f"{_str_or_null(body.get('tenant_name'), 200)}, "
             f"{_num_or_null(body.get('monthly_rent'))}, {_num_or_null(body.get('yearly_rent'))}, "
+            f"{_str_or_null(body.get('finishing'), 100)}, "
+            f"{_num_or_null(body.get('ceiling_height'))}, {_num_or_null(body.get('electricity_kw'))}, "
+            f"{_str_or_null(body.get('utilities'), 500)}, {_str_or_null(body.get('road_line'), 50)}, "
             f"{user['id']}) RETURNING id"
         )
         cur.execute(sql)
@@ -202,13 +205,14 @@ def _listings(cur, conn, method, rid, event, user):
                           ('images', 5000), ('tags', 1000), ('status', 20),
                           ('owner_name', 150), ('owner_phone', 30), ('price_unit', 10),
                           ('purpose', 100), ('condition', 50), ('parking', 20), ('entrance', 20),
-                          ('video_url', 500), ('video_type', 20), ('tenant_name', 200)]:
+                          ('video_url', 500), ('video_type', 20), ('tenant_name', 200),
+                          ('finishing', 100), ('utilities', 500), ('road_line', 50)]:
             if f in body:
                 fields.append(f"{f} = {_str_or_null(body.get(f), length)}")
         for f in ('price', 'price_per_m2', 'area', 'payback', 'profit', 'floor', 'total_floors'):
             if f in body:
                 fields.append(f"{f} = {_int_or_null(body.get(f))}")
-        for f in ('monthly_rent', 'yearly_rent'):
+        for f in ('monthly_rent', 'yearly_rent', 'ceiling_height', 'electricity_kw'):
             if f in body:
                 fields.append(f"{f} = {_num_or_null(body.get(f))}")
         for f in ('use_watermark', 'export_yandex', 'export_avito', 'export_cian'):

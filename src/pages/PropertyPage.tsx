@@ -8,6 +8,7 @@ import { formatPrice } from '@/components/PropertyCard';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import YandexMap from '@/components/YandexMap';
 import PropertyCalculators from '@/components/calculators/PropertyCalculators';
+import SimilarListings from '@/components/SimilarListings';
 
 const TYPE_LABELS: Record<string, string> = {
   office: 'Офис', retail: 'Торговля', warehouse: 'Склад',
@@ -271,6 +272,11 @@ export default function PropertyPage({ onToggleFavorite, onToggleCompare, favori
                   <Stat icon="LineChart" label="Прибыль/мес" value={`${(item.profit / 1000).toFixed(0)} тыс ₽`} />
                 ) : null}
                 {item.tenantName ? <Stat icon="Users" label="Арендатор" value={item.tenantName} /> : null}
+                {item.finishing ? <Stat icon="Paintbrush" label="Отделка" value={item.finishing} /> : null}
+                {item.ceilingHeight ? <Stat icon="MoveVertical" label="Высота потолка" value={`${item.ceilingHeight} м`} /> : null}
+                {item.electricityKw ? <Stat icon="Zap" label="Эл. мощность" value={`${item.electricityKw} кВт`} /> : null}
+                {item.utilities ? <Stat icon="Droplets" label="Коммуникации" value={item.utilities} /> : null}
+                {item.roadLine ? <Stat icon="Milestone" label="Линия расположения" value={item.roadLine} /> : null}
               </div>
             </div>
 
@@ -346,6 +352,8 @@ export default function PropertyPage({ onToggleFavorite, onToggleCompare, favori
               profit={item.profit}
               pricePerM2={item.pricePerM2}
             />
+
+            <SimilarListings listingId={item.id} />
           </div>
 
           {/* Правая часть: цена + форма */}
