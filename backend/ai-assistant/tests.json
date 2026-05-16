@@ -1,11 +1,18 @@
 {
   "tests": [
     {
-      "name": "Без авторизации",
+      "name": "Без авторизации для describe",
       "method": "POST",
       "path": "/",
       "body": {"action": "describe", "prompt": "тест"},
       "expectedStatus": 401
+    },
+    {
+      "name": "Пустой запрос match",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "match", "prompt": ""},
+      "expectedStatus": 400
     }
   ]
 }

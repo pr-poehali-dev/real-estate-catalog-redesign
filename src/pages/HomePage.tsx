@@ -5,6 +5,7 @@ import PropertyCard from '@/components/PropertyCard';
 import Icon from '@/components/ui/icon';
 import { useSettings } from '@/contexts/SettingsContext';
 import ClientLeadsSection from '@/components/ClientLeadsSection';
+import AIMatchModal from '@/components/AIMatchModal';
 
 interface PublicStats {
   total: number;
@@ -39,6 +40,7 @@ export default function HomePage({ properties, favorites, compareList, onToggleF
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [stats, setStats] = useState<PublicStats>({ total: 0, main_city: 'Краснодар' });
+  const [aiOpen, setAiOpen] = useState(false);
 
   useEffect(() => {
     fetch(`${LISTINGS_URL}?resource=public_stats`)
@@ -262,7 +264,10 @@ export default function HomePage({ properties, favorites, compareList, onToggleF
                   Опишите задачу — найдём варианты и рассчитаем окупаемость.
                 </p>
               </div>
-              <button className="btn-orange text-white px-5 py-2.5 rounded-xl font-semibold font-display text-sm inline-flex items-center gap-2 flex-shrink-0">
+              <button
+                onClick={() => setAiOpen(true)}
+                className="btn-orange text-white px-5 py-2.5 rounded-xl font-semibold font-display text-sm inline-flex items-center gap-2 flex-shrink-0 hover:scale-[1.02] transition-transform"
+              >
                 <Icon name="Sparkles" size={16} />
                 Спросить ИИ
               </button>
@@ -271,6 +276,7 @@ export default function HomePage({ properties, favorites, compareList, onToggleF
         </div>
       </section>
 
+      <AIMatchModal open={aiOpen} onClose={() => setAiOpen(false)} />
     </div>
   );
 }

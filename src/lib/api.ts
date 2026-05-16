@@ -157,3 +157,40 @@ export async function fetchPublicSettings(): Promise<PublicSettings> {
     return {};
   }
 }
+
+const AI_URL = 'https://functions.poehali.dev/34bfc4a2-89b9-4c89-bcbc-d82314730aef';
+
+export interface AiMatchListing {
+  id: number;
+  title: string;
+  category: string;
+  deal: string;
+  price: number;
+  area: number;
+  district: string;
+  address: string;
+  payback: number | null;
+  profit: number | null;
+  image: string;
+}
+
+export interface AiMatchResult {
+  listings: AiMatchListing[];
+  reasoning: string;
+  advice: string;
+}
+
+export async function aiMatch(prompt: string): Promise<AiMatchResult> {
+  const res = await fetch(AI_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'match', prompt }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Ошибка ИИ-подбора');
+  return {
+    listings: data.listings || [],
+    reasoning: data.reasoning || '',
+    advice: data.advice || '',
+  };
+}

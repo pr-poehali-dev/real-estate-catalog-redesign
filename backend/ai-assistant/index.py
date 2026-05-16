@@ -63,6 +63,14 @@ SYSTEM_PROMPTS = {
         'без нумерации и пояснений. Теги — на русском, в нижнем регистре, без точек и хештегов. '
         'Пример: офис, центр, парковка, евроремонт, открытая планировка'
     ),
+    'match': (
+        'Ты — консультант агентства коммерческой недвижимости BIZNEST. '
+        'Клиент описал свою задачу. Тебе дан список доступных объектов в JSON. '
+        'Подбери до 3 наиболее подходящих объектов по критериям клиента (тип, бюджет, площадь, район, цель). '
+        'Ответь СТРОГО в формате JSON без markdown и без пояснений вокруг:\n'
+        '{"ids": [id1, id2, id3], "reasoning": "одно предложение почему подобрал именно их", '
+        '"advice": "1-2 предложения совета клиенту и расчёт окупаемости если применимо"}'
+    ),
 }
 
 
@@ -158,18 +166,22 @@ def handler(event, context):
     headers = event.get('headers') or {}
     token = headers.get('X-Auth-Token') or headers.get('x-auth-token') or ''
 
+    body = json.loads(event.get('body') or '{}')
+    action = body.get('action', 'admin')
+
     dsn = os.environ['DATABASE_URL']
     conn = psycopg2.connect(dsn)
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            user = _get_user(cur, token)
-            if not user:
-                return _err(401, 'Требуется авторизация')
-            if user['role'] not in ('admin', 'editor', 'manager'):
-                return _err(403, 'Только для сотрудников')
+            is_public = action == 'match'
+            user = None
+            if not is_public:
+                user = _get_user(cur, token)
+                if not user:
+                    return _err(401, 'Требуется авторизация')
+                if user['role'] not in ('admin', 'editor', 'manager'):
+                    return _err(403, 'Только для сотрудников')
 
-            body = json.loads(event.get('body') or '{}')
-            action = body.get('action', 'admin')
             user_text = (body.get('prompt') or '').strip()
             ctx_data = body.get('context_data')
 
@@ -178,14 +190,59 @@ def handler(event, context):
             if not user_text and not ctx_data:
                 return _err(400, 'Пустой запрос')
 
+            # Для match — подтягиваем активные объекты как контекст
+            matches = []
+            if is_public:
+                cur.execute(
+                    f"SELECT id, title, category, deal, price, area, district, address, "
+                    f"payback, profit, image FROM {SCHEMA}.listings "
+                    f"WHERE is_active = TRUE ORDER BY id DESC LIMIT 60"
+                )
+                listings = cur.fetchall()
+                matches = [dict(r) for r in listings]
+                # Сжатый контекст для модели — только id и ключевые поля
+                compact = [
+                    {
+                        'id': r['id'],
+                        'title': r['title'],
+                        'category': r['category'],
+                        'deal': r['deal'],
+                        'price': r['price'],
+                        'area': r['area'],
+                        'district': r['district'],
+                        'payback': r['payback'],
+                    }
+                    for r in matches
+                ]
+                ctx_data = {'listings': compact}
+
             sys_prompt = SYSTEM_PROMPTS[action]
             full_prompt = user_text
             if ctx_data:
-                full_prompt += '\n\nДанные:\n' + json.dumps(ctx_data, ensure_ascii=False)[:3000]
+                full_prompt += '\n\nДанные:\n' + json.dumps(ctx_data, ensure_ascii=False, default=str)[:6000]
 
             result = _call_deepseek(sys_prompt, full_prompt)
             if 'error' in result:
                 return _err(502, result['error'])
+
+            # Парсим JSON-ответ для match
+            if is_public:
+                text = result['text'].strip()
+                if text.startswith('```'):
+                    text = text.strip('`').lstrip('json').strip()
+                try:
+                    parsed = json.loads(text)
+                except Exception:
+                    parsed = {'ids': [], 'reasoning': result['text'][:500], 'advice': ''}
+                ids = parsed.get('ids') or []
+                picked = [r for r in matches if r['id'] in ids]
+                picked_sorted = sorted(picked, key=lambda r: ids.index(r['id']) if r['id'] in ids else 99)
+                return _ok({
+                    'listings': picked_sorted[:3],
+                    'reasoning': parsed.get('reasoning', ''),
+                    'advice': parsed.get('advice', ''),
+                    'tokens': result.get('tokens', 0),
+                })
 
             log_prompt = _safe(full_prompt, 4000)
             log_resp = _safe(result['text'], 4000)
