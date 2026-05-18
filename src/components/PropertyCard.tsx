@@ -237,7 +237,7 @@ export default function PropertyCard({
               </div>
             )}
           </div>
-          <span className="text-[10px] font-mono text-slate-300 flex-shrink-0 mt-1 select-none">
+          <span className="text-[11px] font-mono text-slate-400 flex-shrink-0 mt-0.5 select-none">
             #{publicId}
           </span>
         </div>
