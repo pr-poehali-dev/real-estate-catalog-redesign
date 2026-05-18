@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { aiApi, AiAction } from '@/lib/adminApi';
+import { aiApi, AiAction, AgentAction } from '@/lib/adminApi';
 import Icon from '@/components/ui/icon';
+
+interface AgentActionState extends AgentAction {
+  status: 'pending' | 'applied' | 'rejected' | 'failed';
+  resultMessage?: string;
+}
 
 interface Msg {
   role: 'user' | 'ai';
@@ -9,6 +14,8 @@ interface Msg {
   ts: number;
   suggestion?: Suggestion;
   status?: 'pending' | 'applied' | 'rejected';
+  agentActions?: AgentActionState[];
+  reasoning?: string;
 }
 
 interface Suggestion {
@@ -37,6 +44,7 @@ interface QuickCmd {
 }
 
 const QUICK_CMDS: QuickCmd[] = [
+  { id: 'agent', label: 'Агент', icon: 'Bot', action: 'agent', prompt: 'Проанализируй текущее состояние каталога и лидов. Предложи самые важные действия, которые нужно выполнить прямо сейчас.' },
   { id: 'help', label: 'Помощь', icon: 'MessageCircle', action: 'admin', prompt: '' },
   { id: 'desc', label: 'Описание объекта', icon: 'PenLine', action: 'describe', prompt: '' },
   { id: 'reply', label: 'Ответ клиенту', icon: 'Mail', action: 'reply_lead', prompt: '' },
@@ -46,6 +54,22 @@ const QUICK_CMDS: QuickCmd[] = [
   { id: 'analytics', label: 'Сводка', icon: 'BarChart3', action: 'analytics', prompt: 'Дай краткую сводку и 2-3 рекомендации по работе с каталогом.' },
   { id: 'seo-audit', label: 'SEO-аудит', icon: 'Gauge', action: 'admin', prompt: 'Проведи SEO-аудит: проверь, какие моменты в каталоге могут влиять на индексацию (мета-теги, alt-теги, дубли заголовков). Дай чек-лист исправлений.' },
 ];
+
+const ACTION_LABELS: Record<string, { label: string; icon: string }> = {
+  update_listing: { label: 'Обновить объект', icon: 'Pencil' },
+  archive_listing: { label: 'В архив', icon: 'Archive' },
+  delete_listing: { label: 'Удалить объект', icon: 'Trash2' },
+  reply_lead: { label: 'Ответить клиенту', icon: 'Send' },
+  close_lead: { label: 'Закрыть лид', icon: 'CheckCircle2' },
+  generate_description: { label: 'Переписать описание', icon: 'PenLine' },
+  note: { label: 'Совет', icon: 'Lightbulb' },
+};
+
+const RISK_STYLES: Record<string, string> = {
+  low: 'bg-emerald-100 text-emerald-700',
+  medium: 'bg-amber-100 text-amber-700',
+  high: 'bg-red-100 text-red-700',
+};
 
 const HISTORY_KEY = 'biznest_ai_chat_history';
 const HISTORY_LIMIT = 50;
@@ -107,23 +131,36 @@ export default function AiChat({
   const send = async (overrideText?: string, overrideAction?: AiAction) => {
     const text = (overrideText ?? input).trim();
     const act = overrideAction ?? action;
-    if ((!text && !contextData) || loading) return;
-    const userMsg: Msg = { role: 'user', text: text || `(быстрая команда: ${act})`, action: act, ts: Date.now() };
+    if ((!text && !contextData && act !== 'agent') || loading) return;
+    const userMsg: Msg = { role: 'user', text: text || `(${act})`, action: act, ts: Date.now() };
     setMessages(m => [...m, userMsg]);
     setInput('');
     setLoading(true);
     try {
-      const r = await aiApi.ask(act, text, contextData);
-      const aiMsg: Msg = {
-        role: 'ai',
-        text: r.text,
-        action: act,
-        ts: Date.now(),
-        suggestion: detectSuggestion(r.text, act, currentText),
-        status: 'pending',
-      };
-      setMessages(m => [...m, aiMsg]);
-      onResult?.(r.text);
+      if (act === 'agent') {
+        const r = await aiApi.agent(text || 'Что мне сейчас нужно сделать?', contextData);
+        const aiMsg: Msg = {
+          role: 'ai',
+          text: r.reasoning || 'Готов предложить действия.',
+          action: act,
+          ts: Date.now(),
+          reasoning: r.reasoning,
+          agentActions: (r.actions || []).map(a => ({ ...a, status: 'pending' as const })),
+        };
+        setMessages(m => [...m, aiMsg]);
+      } else {
+        const r = await aiApi.ask(act, text, contextData);
+        const aiMsg: Msg = {
+          role: 'ai',
+          text: r.text,
+          action: act,
+          ts: Date.now(),
+          suggestion: detectSuggestion(r.text, act, currentText),
+          status: 'pending',
+        };
+        setMessages(m => [...m, aiMsg]);
+        onResult?.(r.text);
+      }
     } catch (e: unknown) {
       setMessages(m => [
         ...m,
@@ -131,6 +168,44 @@ export default function AiChat({
       ]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const confirmAgentAction = async (msgIdx: number, actIdx: number) => {
+    const msg = messages[msgIdx];
+    if (!msg?.agentActions) return;
+    const target = msg.agentActions[actIdx];
+    if (!target || target.status !== 'pending') return;
+    setMessages(m => m.map((x, i) => i === msgIdx && x.agentActions
+      ? { ...x, agentActions: x.agentActions.map((a, j) => j === actIdx ? { ...a, status: 'pending', resultMessage: 'Выполняется...' } : a) }
+      : x));
+    try {
+      const res = await aiApi.execute([{ type: target.type, title: target.title, description: target.description, risk: target.risk, params: target.params }]);
+      const r = res.results?.[0]?.result || {};
+      const ok = !!r.ok;
+      setMessages(m => m.map((x, i) => i === msgIdx && x.agentActions
+        ? { ...x, agentActions: x.agentActions.map((a, j) => j === actIdx ? { ...a, status: ok ? 'applied' : 'failed', resultMessage: r.message || r.error || '' } : a) }
+        : x));
+    } catch (e: unknown) {
+      setMessages(m => m.map((x, i) => i === msgIdx && x.agentActions
+        ? { ...x, agentActions: x.agentActions.map((a, j) => j === actIdx ? { ...a, status: 'failed', resultMessage: e instanceof Error ? e.message : 'Ошибка' } : a) }
+        : x));
+    }
+  };
+
+  const rejectAgentAction = (msgIdx: number, actIdx: number) => {
+    setMessages(m => m.map((x, i) => i === msgIdx && x.agentActions
+      ? { ...x, agentActions: x.agentActions.map((a, j) => j === actIdx ? { ...a, status: 'rejected' as const } : a) }
+      : x));
+  };
+
+  const confirmAllAgentActions = async (msgIdx: number) => {
+    const msg = messages[msgIdx];
+    if (!msg?.agentActions) return;
+    for (let i = 0; i < msg.agentActions.length; i++) {
+      if (msg.agentActions[i].status === 'pending') {
+        await confirmAgentAction(msgIdx, i);
+      }
     }
   };
 
@@ -228,13 +303,13 @@ export default function AiChat({
               <Icon name="Bot" size={40} className="mx-auto mb-3 opacity-50" />
               <div className="font-semibold mb-2">Привет! Я твой ИИ-ассистент.</div>
               <div className="text-xs space-y-1">
-                <div>Выбери быструю команду сверху</div>
-                <div>или напиши свой запрос ниже</div>
+                <div>Нажми <span className="font-semibold text-brand-blue">«Агент»</span> — и я сам предложу действия, которые надо выполнить.</div>
+                <div>Каждое решение ты подтверждаешь вручную.</div>
               </div>
               <div className="mt-4 space-y-1.5 text-xs text-left max-w-xs mx-auto">
-                <div className="px-3 py-2 bg-muted/50 rounded-lg">«Напиши описание офиса 200 м² на Тверской»</div>
-                <div className="px-3 py-2 bg-muted/50 rounded-lg">«Как правильно обработать лид?»</div>
-                <div className="px-3 py-2 bg-muted/50 rounded-lg">«Сделай SEO meta для склада в Химках»</div>
+                <div className="px-3 py-2 bg-muted/50 rounded-lg">«Найди объекты без описания и допиши их»</div>
+                <div className="px-3 py-2 bg-muted/50 rounded-lg">«Что делать с новыми лидами?»</div>
+                <div className="px-3 py-2 bg-muted/50 rounded-lg">«Архивируй старые неактуальные объекты»</div>
               </div>
             </div>
           )}
@@ -306,6 +381,86 @@ export default function AiChat({
               {m.role === 'ai' && m.status === 'rejected' && (
                 <div className="mt-1 text-[11px] text-muted-foreground flex items-center gap-1">
                   <Icon name="XCircle" size={12} /> Отклонено
+                </div>
+              )}
+
+              {m.role === 'ai' && m.agentActions && m.agentActions.length > 0 && (
+                <div className="mt-2 w-full max-w-[95%] space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="text-[11px] font-semibold uppercase text-muted-foreground flex items-center gap-1">
+                      <Icon name="Bot" size={12} />
+                      Предложено действий: {m.agentActions.length}
+                    </div>
+                    {m.agentActions.some(a => a.status === 'pending') && (
+                      <button
+                        onClick={() => confirmAllAgentActions(i)}
+                        className="text-[11px] btn-blue text-white px-2 py-1 rounded-md font-semibold inline-flex items-center gap-1"
+                      >
+                        <Icon name="CheckCheck" size={12} /> Подтвердить всё
+                      </button>
+                    )}
+                  </div>
+                  {m.agentActions.map((a, j) => {
+                    const meta = ACTION_LABELS[a.type] || { label: a.type, icon: 'Zap' };
+                    return (
+                      <div key={j} className="border border-border rounded-xl p-3 bg-white">
+                        <div className="flex items-start gap-2 mb-1.5">
+                          <div className="mt-0.5 w-7 h-7 rounded-lg bg-brand-blue/10 flex items-center justify-center shrink-0">
+                            <Icon name={meta.icon} size={14} className="text-brand-blue" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <div className="text-sm font-semibold">{a.title || meta.label}</div>
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded ${RISK_STYLES[a.risk] || 'bg-muted'}`}>
+                                {a.risk === 'high' ? 'риск' : a.risk === 'medium' ? 'средне' : 'безопасно'}
+                              </span>
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-0.5">{a.description}</div>
+                            {a.params && Object.keys(a.params).length > 0 && (
+                              <details className="mt-1.5">
+                                <summary className="text-[10px] text-muted-foreground cursor-pointer hover:text-foreground">Параметры</summary>
+                                <pre className="text-[10px] bg-muted/50 p-2 rounded mt-1 overflow-x-auto">{JSON.stringify(a.params, null, 2)}</pre>
+                              </details>
+                            )}
+                          </div>
+                        </div>
+
+                        {a.status === 'pending' && (
+                          <div className="flex gap-2 mt-2">
+                            <button
+                              onClick={() => confirmAgentAction(i, j)}
+                              className="flex-1 btn-blue text-white px-3 py-1.5 rounded-lg text-xs font-semibold inline-flex items-center justify-center gap-1"
+                            >
+                              <Icon name="Check" size={12} /> Подтвердить
+                            </button>
+                            <button
+                              onClick={() => rejectAgentAction(i, j)}
+                              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-red-600 hover:bg-red-50 inline-flex items-center gap-1"
+                            >
+                              <Icon name="X" size={12} /> Отклонить
+                            </button>
+                          </div>
+                        )}
+                        {a.status === 'applied' && (
+                          <div className="mt-2 text-[11px] text-emerald-700 flex items-center gap-1">
+                            <Icon name="CheckCircle2" size={12} />
+                            {a.resultMessage || 'Выполнено'}
+                          </div>
+                        )}
+                        {a.status === 'failed' && (
+                          <div className="mt-2 text-[11px] text-red-600 flex items-center gap-1">
+                            <Icon name="AlertTriangle" size={12} />
+                            {a.resultMessage || 'Ошибка'}
+                          </div>
+                        )}
+                        {a.status === 'rejected' && (
+                          <div className="mt-2 text-[11px] text-muted-foreground flex items-center gap-1">
+                            <Icon name="XCircle" size={12} /> Отклонено
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
