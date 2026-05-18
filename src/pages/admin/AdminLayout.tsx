@@ -30,9 +30,9 @@ export default function AdminLayout({ section, setSection, onExit, children }: P
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [idleWarning, setIdleWarning] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(IDLE_WARNING_MS / 1000);
-  const logoutTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const warningTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const countdownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const logoutTimer = useRef<number | null>(null);
+  const warningTimer = useRef<number | null>(null);
+  const countdownTimer = useRef<number | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -63,8 +63,8 @@ export default function AdminLayout({ section, setSection, onExit, children }: P
       if (!idleWarning) resetTimers();
     };
 
-    const events: Array<keyof WindowEventMap> = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart'];
-    events.forEach(ev => window.addEventListener(ev, onActivity, { passive: true }));
+    const events = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart'];
+    events.forEach(ev => window.addEventListener(ev, onActivity, { passive: true } as AddEventListenerOptions));
     resetTimers();
 
     return () => {
