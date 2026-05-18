@@ -15,6 +15,101 @@ from psycopg2.extras import RealDictCursor
 
 SCHEMA = 't_p71821556_real_estate_catalog_'
 
+CONTROL_CHARS_RE = re.compile(r'[\x00-\x08\x0B\x0C\x0E-\x1F]')
+XML_DECL_RE = re.compile(r'^<\?xml[^?]*\?>', re.IGNORECASE)
+CDATA_RE = re.compile(r'<!\[CDATA\[.*?\]\]>', re.DOTALL)
+TAG_RE = re.compile(r'<(/?)([A-Za-z_][\w.-]*)((?:\s+[^<>]*?)?)\s*(/?)>')
+
+
+def _autofix_xml(text):
+    """Чинит типичные косяки XML: BOM, мусор перед декларацией, неэкранированные &/<, управляющие символы."""
+    fixes = []
+    if not text:
+        return text, fixes
+
+    if text.startswith('\ufeff'):
+        text = text.lstrip('\ufeff')
+        fixes.append('removed BOM')
+
+    stripped = text.lstrip()
+    if stripped != text:
+        text = stripped
+        fixes.append('stripped leading whitespace')
+
+    if CONTROL_CHARS_RE.search(text):
+        text = CONTROL_CHARS_RE.sub('', text)
+        fixes.append('removed control chars')
+
+    # Раздельная обработка CDATA — не трогаем содержимое
+    parts = []
+    last = 0
+    for m in CDATA_RE.finditer(text):
+        parts.append(('text', text[last:m.start()]))
+        parts.append(('cdata', m.group(0)))
+        last = m.end()
+    parts.append(('text', text[last:]))
+
+    rebuilt = []
+    fixed_amp = 0
+    fixed_lt = 0
+    for kind, seg in parts:
+        if kind == 'cdata':
+            rebuilt.append(seg)
+            continue
+        new_seg = re.sub(r'&(?![a-zA-Z#]+;)', '&amp;', seg)
+        if new_seg != seg:
+            fixed_amp += 1
+        seg = new_seg
+
+        out = []
+        i = 0
+        n = len(seg)
+        while i < n:
+            ch = seg[i]
+            if ch == '<':
+                m = TAG_RE.match(seg, i)
+                if m:
+                    out.append(m.group(0))
+                    i = m.end()
+                    continue
+                if seg.startswith('<!--', i):
+                    end = seg.find('-->', i + 4)
+                    if end != -1:
+                        out.append(seg[i:end + 3])
+                        i = end + 3
+                        continue
+                if seg.startswith('<?', i):
+                    end = seg.find('?>', i + 2)
+                    if end != -1:
+                        out.append(seg[i:end + 2])
+                        i = end + 2
+                        continue
+                if seg.startswith('<!', i):
+                    end = seg.find('>', i + 2)
+                    if end != -1:
+                        out.append(seg[i:end + 1])
+                        i = end + 1
+                        continue
+                out.append('&lt;')
+                fixed_lt += 1
+                i += 1
+            else:
+                out.append(ch)
+                i += 1
+        rebuilt.append(''.join(out))
+
+    text = ''.join(rebuilt)
+    if fixed_amp:
+        fixes.append("escaped '&' to '&amp;'")
+    if fixed_lt:
+        fixes.append(f"escaped {fixed_lt} stray '<' to '&lt;'")
+
+    if not XML_DECL_RE.match(text):
+        text = '<?xml version="1.0" encoding="UTF-8"?>\n' + text
+        fixes.append('added XML declaration')
+
+    return text, fixes
+
 
 def _safe(s, length=255):
     return (s or '').replace("'", "''")[:length]
@@ -289,10 +384,19 @@ def handler(event, context):
                     return _json({'error': 'Пустой XML'}, 400)
 
                 xml_text = re.sub(r'\sxmlns="[^"]+"', '', xml_text, count=1)
+                autofix_report = []
                 try:
                     root = ET.fromstring(xml_text)
-                except Exception as e:
-                    return _json({'error': f'Ошибка парсинга XML: {str(e)[:200]}'}, 400)
+                except ET.ParseError:
+                    # Авто-починка типичных синтаксических ошибок и повторная попытка
+                    fixed_text, autofix_report = _autofix_xml(xml_text)
+                    try:
+                        root = ET.fromstring(fixed_text)
+                    except ET.ParseError as e:
+                        return _json({
+                            'error': f'Ошибка парсинга XML: {str(e)[:200]}',
+                            'autofix_attempted': autofix_report,
+                        }, 400)
 
                 imported = 0
                 errors = []
@@ -342,7 +446,11 @@ def handler(event, context):
                         errors.append(str(e)[:100])
 
                 conn.commit()
-                return _json({'imported': imported, 'errors': errors[:5]})
+                return _json({
+                    'imported': imported,
+                    'errors': errors[:5],
+                    'autofix_applied': autofix_report,
+                })
 
             return _json({'error': 'Method not allowed'}, 405)
     finally:
