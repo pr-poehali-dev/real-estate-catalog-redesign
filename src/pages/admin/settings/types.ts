@@ -21,6 +21,9 @@ export interface S {
   seo_description: string;
   yandex_api_key: string;
   yandex_folder_id: string;
+  legal_personal_data: string;
+  legal_privacy_policy: string;
+  legal_marketing_consent: string;
 }
 
 export interface City {

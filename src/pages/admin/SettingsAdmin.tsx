@@ -9,6 +9,7 @@ import GeneralTab from './settings/GeneralTab';
 import SeoTab from './settings/SeoTab';
 import IntegrationsTab from './settings/IntegrationsTab';
 import CitiesTab from './settings/CitiesTab';
+import LegalTab from './settings/LegalTab';
 
 export default function SettingsAdmin() {
   const { reload } = useSettings();
@@ -17,7 +18,7 @@ export default function SettingsAdmin() {
   const [saved, setSaved] = useState(false);
   const [cityQuery, setCityQuery] = useState('');
   const [cityAdding, setCityAdding] = useState(false);
-  const [tab, setTab] = useState<'general' | 'watermark' | 'seo' | 'integrations' | 'cities' | 'purposes' | 'feeds'>('general');
+  const [tab, setTab] = useState<'general' | 'watermark' | 'seo' | 'integrations' | 'cities' | 'purposes' | 'feeds' | 'legal'>('general');
   const [showKey, setShowKey] = useState(false);
   const [showMapsKey, setShowMapsKey] = useState(false);
   const [pingState, setPingState] = useState<PingState>({
@@ -133,6 +134,7 @@ export default function SettingsAdmin() {
     ['cities', 'Города', 'MapPin'],
     ['purposes', 'Назначения', 'Tag'],
     ['feeds', 'XML фиды', 'Rss'],
+    ['legal', 'Правовые документы', 'Scale'],
   ];
 
   return (
@@ -179,6 +181,7 @@ export default function SettingsAdmin() {
 
       {tab === 'purposes' && <PurposesAdmin />}
       {tab === 'feeds' && <XmlFeedsAdmin />}
+      {tab === 'legal' && <LegalTab s={s} setS={setS} saved={saved} save={save} />}
     </div>
   );
 }
