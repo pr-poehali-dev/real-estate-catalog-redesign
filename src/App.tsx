@@ -142,8 +142,10 @@ export default function App() {
   const compareProperties = properties.filter(p => compareList.includes(p.id));
   const favoriteProperties = properties.filter(p => favorites.includes(p.id));
 
+  const ADMIN_ROLES = ['admin', 'editor', 'manager', 'director', 'broker', 'office_manager'];
+
   if (view === 'login') {
-    return <LoginPage onSuccess={() => setView(user && ['admin', 'editor', 'manager'].includes(user.role) ? 'admin' : 'site')} onBack={() => setView('site')} />;
+    return <LoginPage onSuccess={() => setView(user && ADMIN_ROLES.includes(user.role) ? 'admin' : 'site')} onBack={() => setView('site')} />;
   }
 
   if (view === 'admin') {
@@ -151,9 +153,9 @@ export default function App() {
       return <div className="min-h-screen flex items-center justify-center">Загрузка...</div>;
     }
     if (!user) {
-      return <LoginPage onSuccess={() => setView(user && ['admin', 'editor', 'manager'].includes((user as { role: string }).role) ? 'admin' : 'site')} onBack={() => setView('site')} />;
+      return <LoginPage onSuccess={() => setView(user && ADMIN_ROLES.includes((user as { role: string }).role) ? 'admin' : 'site')} onBack={() => setView('site')} />;
     }
-    if (!['admin', 'editor', 'manager'].includes(user.role)) {
+    if (!ADMIN_ROLES.includes(user.role)) {
       return <LoginPage onSuccess={() => setView('admin')} onBack={() => setView('site')} />;
     }
     return <AdminPage onExit={() => setView('site')} />;

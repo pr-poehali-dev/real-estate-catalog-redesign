@@ -23,7 +23,7 @@ const navItems = [
 export default function Navbar({ currentPage, setCurrentPage, favoritesCount, compareCount, onLogin, onAdmin }: NavbarProps) {
   const { user } = useAuth();
   const { settings } = useSettings();
-  const isStaff = user && ['admin', 'editor', 'manager'].includes(user.role);
+  const isStaff = user && ['admin', 'editor', 'manager', 'director', 'broker', 'office_manager'].includes(user.role);
   const brandName = settings.company_name || 'BIZNEST';
   const logoUrl = settings.logo_url;
   return (

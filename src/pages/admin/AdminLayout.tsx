@@ -6,7 +6,8 @@ import AiChat from '@/components/admin/AiChat';
 const IDLE_TIMEOUT_MS = 2 * 60 * 60 * 1000;
 const IDLE_WARNING_MS = 2 * 60 * 1000;
 
-export type AdminSection = 'dashboard' | 'listings' | 'leads' | 'users' | 'pages' | 'settings' | 'ai-logs';
+export type AdminSection = 'dashboard' | 'listings' | 'leads' | 'users' | 'pages' | 'settings' | 'ai-logs'
+  | 'crm-dashboard' | 'crm-owners' | 'crm-kanban' | 'crm-gamification' | 'crm-checks' | 'crm-payments';
 
 interface Props {
   section: AdminSection;
@@ -15,13 +16,21 @@ interface Props {
   children: ReactNode;
 }
 
-const NAV: { id: AdminSection; label: string; icon: string; roles: string[] }[] = [
+const CRM_ROLES = ['admin', 'director', 'broker', 'office_manager', 'manager'];
+
+const NAV: { id: AdminSection; label: string; icon: string; roles: string[]; group?: string }[] = [
   { id: 'dashboard', label: 'Дашборд', icon: 'LayoutDashboard', roles: ['admin', 'editor', 'manager'] },
   { id: 'listings', label: 'Объявления', icon: 'Building2', roles: ['admin', 'editor', 'manager'] },
   { id: 'leads', label: 'Лиды', icon: 'Inbox', roles: ['admin', 'editor', 'manager'] },
   { id: 'users', label: 'Пользователи', icon: 'Users', roles: ['admin'] },
   { id: 'pages', label: 'Страницы', icon: 'FileText', roles: ['admin', 'editor'] },
   { id: 'settings', label: 'Настройки', icon: 'Settings', roles: ['admin', 'editor'] },
+  { id: 'crm-dashboard', label: 'CRM — Обзор', icon: 'PieChart', roles: CRM_ROLES, group: 'crm' },
+  { id: 'crm-owners', label: 'Собственники', icon: 'ContactRound', roles: CRM_ROLES, group: 'crm' },
+  { id: 'crm-kanban', label: 'Воронка сделок', icon: 'KanbanSquare', roles: CRM_ROLES, group: 'crm' },
+  { id: 'crm-gamification', label: 'Рейтинг команды', icon: 'Trophy', roles: CRM_ROLES, group: 'crm' },
+  { id: 'crm-checks', label: 'Проверки', icon: 'ShieldCheck', roles: CRM_ROLES, group: 'crm' },
+  { id: 'crm-payments', label: 'Платежи', icon: 'CreditCard', roles: CRM_ROLES, group: 'crm' },
 ];
 
 export default function AdminLayout({ section, setSection, onExit, children }: Props) {
@@ -102,6 +111,9 @@ export default function AdminLayout({ section, setSection, onExit, children }: P
     editor: 'Редактор',
     manager: 'Менеджер',
     client: 'Клиент',
+    broker: 'Брокер',
+    office_manager: 'Офис-менеджер',
+    director: 'Директор',
   };
 
   return (
@@ -121,24 +133,38 @@ export default function AdminLayout({ section, setSection, onExit, children }: P
           </button>
         </div>
 
-        <nav className="p-3 space-y-1">
-          {items.map(item => (
+        <nav className="p-3 space-y-1 overflow-y-auto flex-1">
+          {items.filter(n => !n.group).map(item => (
             <button
               key={item.id}
-              onClick={() => {
-                setSection(item.id);
-                setSidebarOpen(false);
-              }}
+              onClick={() => { setSection(item.id); setSidebarOpen(false); }}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition ${
-                section === item.id
-                  ? 'bg-brand-blue text-white font-semibold'
-                  : 'text-foreground hover:bg-muted'
+                section === item.id ? 'bg-brand-blue text-white font-semibold' : 'text-foreground hover:bg-muted'
               }`}
             >
               <Icon name={item.icon} size={18} />
               {item.label}
             </button>
           ))}
+          {items.some(n => n.group === 'crm') && (
+            <>
+              <div className="pt-3 pb-1 px-3">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">CRM</div>
+              </div>
+              {items.filter(n => n.group === 'crm').map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => { setSection(item.id); setSidebarOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition ${
+                    section === item.id ? 'bg-brand-blue text-white font-semibold' : 'text-foreground hover:bg-muted'
+                  }`}
+                >
+                  <Icon name={item.icon} size={18} />
+                  {item.label}
+                </button>
+              ))}
+            </>
+          )}
         </nav>
 
         <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-border bg-white">

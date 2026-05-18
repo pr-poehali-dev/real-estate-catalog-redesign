@@ -1,0 +1,16 @@
+{
+  "tests": [
+    {
+      "name": "GET no auth",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 403
+    },
+    {
+      "name": "OPTIONS CORS",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    }
+  ]
+}
