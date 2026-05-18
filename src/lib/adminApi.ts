@@ -2,6 +2,7 @@ const AUTH_URL = 'https://functions.poehali.dev/e5d9d96a-a3ca-45cd-9ea3-3e2982b6
 const ADMIN_URL = 'https://functions.poehali.dev/aeccc0fe-9c55-4933-b292-432cec9cc09d';
 const AI_URL = 'https://functions.poehali.dev/34bfc4a2-89b9-4c89-bcbc-d82314730aef';
 const UPLOADS_URL = 'https://functions.poehali.dev/82b9e0bc-2ffa-4045-a74b-a09985cec2b5';
+const REMOVE_WM_URL = 'https://functions.poehali.dev/93965724-e0d4-411d-8100-b9468a1a0627';
 
 export type Role = 'admin' | 'editor' | 'manager' | 'client';
 
@@ -138,6 +139,18 @@ export async function uploadFile(file: File, folder: 'photos' | 'logo' | 'waterm
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Ошибка загрузки');
   return data.url as string;
+}
+
+export async function removeWatermark(photoUrl: string, sensitivity = 0.35): Promise<{ url: string; detected: boolean }> {
+  const token = getToken();
+  const res = await fetch(REMOVE_WM_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...(token ? { 'X-Auth-Token': token } : {}) },
+    body: JSON.stringify({ url: photoUrl, sensitivity }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Ошибка обработки');
+  return { url: data.url as string, detected: Boolean(data.detected) };
 }
 
 export type AiAction = 'describe' | 'reply_lead' | 'seo' | 'moderate' | 'analytics' | 'admin' | 'add_city' | 'auto_tags' | 'agent';
