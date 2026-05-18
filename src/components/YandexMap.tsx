@@ -91,10 +91,21 @@ export default function YandexMap({
     let cancelled = false;
 
     if (!apiKey) {
-      setError('INVALID_KEY');
+      setError('NO_KEY');
       return;
     }
     setError(null);
+
+    // Перехватываем ошибки Яндекс.Карт (домен не привязан, неверный ключ и т.д.)
+    const origConsoleError = console.error;
+    let ymapsErrorMsg = '';
+    console.error = (...args: unknown[]) => {
+      const text = args.map(a => String(a)).join(' ');
+      if (text.toLowerCase().includes('apikey') || text.toLowerCase().includes('api key') || text.toLowerCase().includes('ymaps')) {
+        ymapsErrorMsg = text;
+      }
+      origConsoleError.apply(console, args);
+    };
 
     loadYmapsScript(apiKey).then(() => {
       if (cancelled || !containerRef.current || !window.ymaps) return;
@@ -107,6 +118,17 @@ export default function YandexMap({
             zoom,
             controls: ['zoomControl', 'fullscreenControl', 'geolocationControl'],
           });
+          // Проверяем через 2 секунды — не вылетела ли ошибка от Яндекса
+          setTimeout(() => {
+            if (!cancelled && ymapsErrorMsg) {
+              const m = ymapsErrorMsg.toLowerCase();
+              if (m.includes('referer') || m.includes('domain') || m.includes('домен')) {
+                setError('DOMAIN_NOT_ALLOWED');
+              } else if (m.includes('apikey') || m.includes('api key') || m.includes('forbidden') || m.includes('403')) {
+                setError('INVALID_KEY');
+              }
+            }
+          }, 2000);
         } catch (err) {
           const msg = err instanceof Error ? err.message : '';
           if (msg.toLowerCase().includes('key') || msg.toLowerCase().includes('apikey')) {
@@ -185,7 +207,21 @@ export default function YandexMap({
   }, []);
 
   if (error) {
-    const isKeyError = error === 'INVALID_KEY' || !settings.yandex_maps_api_key;
+    let title = 'Карта недоступна';
+    let body = 'Не удалось загрузить Яндекс.Карты. Проверьте подключение к интернету.';
+    const showLink = error === 'NO_KEY' || error === 'INVALID_KEY' || error === 'DOMAIN_NOT_ALLOWED';
+
+    if (error === 'NO_KEY') {
+      title = 'Карта не настроена';
+      body = 'Не указан API-ключ Яндекс.Карт. Добавьте его в админке: Настройки → SEO и аналитика → API-ключ Яндекс.Карт.';
+    } else if (error === 'INVALID_KEY') {
+      title = 'Неверный API-ключ';
+      body = 'Ключ отклонён Яндексом. Проверьте, что вы создали ключ именно для сервиса «JavaScript API и HTTP Геокодер» и он активирован (статус «Подключён»).';
+    } else if (error === 'DOMAIN_NOT_ALLOWED') {
+      title = 'Домен не разрешён';
+      body = `Ключ существует, но текущий домен (${typeof window !== 'undefined' ? window.location.hostname : ''}) не добавлен в список разрешённых HTTP Referer в кабинете Яндекса.`;
+    }
+
     return (
       <div
         className={`bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl flex flex-col items-center justify-center text-center px-6 py-8 ${className}`}
@@ -198,22 +234,16 @@ export default function YandexMap({
             <circle cx="12" cy="10" r="3" />
           </svg>
         </div>
-        <div className="font-display font-700 text-base text-foreground mb-1">
-          {isKeyError ? 'Карта не настроена' : 'Карта недоступна'}
-        </div>
-        <div className="text-xs text-muted-foreground max-w-sm">
-          {isKeyError
-            ? 'Не указан или неверный API-ключ Яндекс.Карт. Добавьте его в админке: Настройки → SEO и аналитика → API-ключ Яндекс.Карт.'
-            : 'Не удалось загрузить Яндекс.Карты. Проверьте подключение к интернету.'}
-        </div>
-        {isKeyError && (
+        <div className="font-display font-700 text-base text-foreground mb-1">{title}</div>
+        <div className="text-xs text-muted-foreground max-w-sm">{body}</div>
+        {showLink && (
           <a
             href="https://developer.tech.yandex.ru/services/"
             target="_blank"
             rel="noreferrer"
             className="mt-3 text-xs font-semibold text-brand-blue hover:underline"
           >
-            Получить ключ Яндекс.Карт →
+            Открыть кабинет разработчика Яндекса →
           </a>
         )}
       </div>
