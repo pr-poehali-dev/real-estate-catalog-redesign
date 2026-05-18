@@ -230,25 +230,25 @@ export default function PropertyCard({
           </div>
         </div>
 
-        {/* ── Цена (под фото, чётко) ── */}
-        <div className="px-3 pt-3 pb-2.5 flex items-baseline justify-between gap-2 border-b border-border/40">
-          <div>
-            <div className="font-display font-800 text-[17px] text-brand-blue leading-none">
+        {/* ── Цена + ID ── */}
+        <div className="px-3 pt-2.5 pb-2.5 flex items-start justify-between gap-2 bg-brand-blue/[0.04] border-b border-brand-blue/10">
+          <div className="min-w-0">
+            <div className="font-display font-900 text-[20px] text-brand-blue leading-none tracking-tight">
               {formatPrice(property.price, property.deal)}
             </div>
             {ppm2 && (
-              <div className="text-[11px] text-muted-foreground mt-0.5">
-                {ppm2.toLocaleString('ru')} ₽/м²
+              <div className="text-[11px] text-muted-foreground mt-0.5 font-medium">
+                {ppm2.toLocaleString('ru')} <span className="text-muted-foreground/70">₽/м²</span>
               </div>
             )}
           </div>
-          <span className="text-[11px] font-bold font-mono text-brand-blue/60 bg-brand-blue/8 px-2 py-0.5 rounded-full flex-shrink-0">
+          <span className="text-[10px] font-bold font-mono text-slate-400 bg-white border border-border px-1.5 py-0.5 rounded-md flex-shrink-0 mt-0.5">
             #{publicId}
           </span>
         </div>
 
         {/* ── Контент ── */}
-        <div className="px-3 pt-2 pb-3 flex flex-col flex-1 gap-1.5">
+        <div className="px-3 pt-2.5 pb-3 flex flex-col flex-1 gap-2">
 
           {/* Название */}
           <Link to={href}>
@@ -257,7 +257,37 @@ export default function PropertyCard({
             </h3>
           </Link>
 
-          {/* Адрес — кликабельный, открывает карту в попапе */}
+          {/* Ключевые параметры — крупно и заметно */}
+          <div className="grid grid-cols-2 gap-1.5">
+            <div className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 flex items-center gap-1.5">
+              <Icon name="Maximize" size={13} className="text-brand-blue/70 flex-shrink-0" />
+              <div>
+                <div className="font-display font-800 text-[13px] text-foreground leading-none">{property.area} м²</div>
+                <div className="text-[9px] text-muted-foreground mt-0.5">площадь</div>
+              </div>
+            </div>
+            {property.floor ? (
+              <div className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 flex items-center gap-1.5">
+                <Icon name="Layers" size={13} className="text-brand-blue/70 flex-shrink-0" />
+                <div>
+                  <div className="font-display font-800 text-[13px] text-foreground leading-none">
+                    {property.floor}{property.totalFloors ? `/${property.totalFloors}` : ''} эт.
+                  </div>
+                  <div className="text-[9px] text-muted-foreground mt-0.5">этаж</div>
+                </div>
+              </div>
+            ) : property.payback ? (
+              <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-2 py-1.5 flex items-center gap-1.5">
+                <Icon name="TrendingUp" size={13} className="text-emerald-600 flex-shrink-0" />
+                <div>
+                  <div className="font-display font-800 text-[13px] text-emerald-700 leading-none">{property.payback} мес</div>
+                  <div className="text-[9px] text-emerald-600/70 mt-0.5">окупаемость</div>
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+          {/* Адрес — кликабельный */}
           {addressLine && (
             <button
               type="button"
@@ -265,28 +295,11 @@ export default function PropertyCard({
               className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-brand-blue transition-colors text-left w-full group/addr"
               title="Показать на карте"
             >
-              <Icon name="MapPin" size={11} className="flex-shrink-0 text-brand-blue/60 group-hover/addr:text-brand-blue transition-colors" />
+              <Icon name="MapPin" size={11} className="flex-shrink-0 text-brand-blue/50 group-hover/addr:text-brand-blue transition-colors" />
               <span className="truncate underline decoration-dotted underline-offset-2">{addressLine}</span>
-              <Icon name="Map" size={10} className="flex-shrink-0 opacity-0 group-hover/addr:opacity-60 transition-opacity ml-auto" />
+              <Icon name="Map" size={10} className="flex-shrink-0 opacity-0 group-hover/addr:opacity-50 transition-opacity ml-auto" />
             </button>
           )}
-
-          {/* Ключевые параметры */}
-          <div className="flex flex-wrap gap-1">
-            <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-foreground/70 bg-slate-100 px-1.5 py-0.5 rounded-md">
-              <Icon name="Maximize" size={10} />{property.area} м²
-            </span>
-            {property.floor ? (
-              <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-foreground/70 bg-slate-100 px-1.5 py-0.5 rounded-md">
-                <Icon name="Layers" size={10} />{property.floor}{property.totalFloors ? `/${property.totalFloors}` : ''} эт.
-              </span>
-            ) : null}
-            {property.payback ? (
-              <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-md">
-                <Icon name="TrendingUp" size={10} />окуп. {property.payback} мес
-              </span>
-            ) : null}
-          </div>
 
           {/* Оценка рынка */}
           {assessCls && hint?.price_assessment && (
