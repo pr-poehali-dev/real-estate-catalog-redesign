@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { adminApi } from '@/lib/adminApi';
 import Icon from '@/components/ui/icon';
-import CrmKanban from './crm/CrmKanban';
 
 interface Stats {
   listings_active: number;
@@ -50,7 +49,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map(c => (
           <div
@@ -94,7 +93,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <CrmKanban />
     </div>
   );
 }
