@@ -203,12 +203,7 @@ export default function PropertyCard({
             )}
           </div>
 
-          {/* ID — сверху-справа */}
-          <div className="absolute top-2.5 right-2.5 z-10">
-            <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full bg-black/60 text-white/90 backdrop-blur-sm tracking-wide">
-              #{publicId}
-            </span>
-          </div>
+
 
           {/* Избранное / сравнение */}
           <div className="absolute right-2.5 top-10 flex flex-col gap-1.5 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -242,7 +237,7 @@ export default function PropertyCard({
               </div>
             )}
           </div>
-          <span className="text-[10px] font-bold font-mono text-slate-400 bg-white border border-border px-1.5 py-0.5 rounded-md flex-shrink-0 mt-0.5">
+          <span className="text-[10px] font-mono text-slate-300 flex-shrink-0 mt-1 select-none">
             #{publicId}
           </span>
         </div>
