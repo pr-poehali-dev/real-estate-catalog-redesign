@@ -75,11 +75,33 @@ function pageFromPath(pathname: string): Page {
   return 'home';
 }
 
+const VIEW_KEY = 'biznest_view';
+
+function loadInitialView(): AppView {
+  try {
+    const v = localStorage.getItem(VIEW_KEY);
+    if (v === 'admin' || v === 'login' || v === 'site') return v;
+  } catch {
+    // ignore localStorage errors
+  }
+  return 'site';
+}
+
 export default function App() {
   const { user, loading: authLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const [view, setView] = useState<AppView>('site');
+  const [view, setViewState] = useState<AppView>(() => loadInitialView());
+
+  const setView = (v: AppView) => {
+    setViewState(v);
+    try {
+      if (v === 'admin') localStorage.setItem(VIEW_KEY, 'admin');
+      else localStorage.removeItem(VIEW_KEY);
+    } catch {
+      // ignore
+    }
+  };
   const [favorites, setFavorites] = useState<number[]>([]);
   const [compareList, setCompareList] = useState<number[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
@@ -129,12 +151,10 @@ export default function App() {
       return <div className="min-h-screen flex items-center justify-center">Загрузка...</div>;
     }
     if (!user) {
-      setView('login');
-      return null;
+      return <LoginPage onSuccess={() => setView(user && ['admin', 'editor', 'manager'].includes((user as { role: string }).role) ? 'admin' : 'site')} onBack={() => setView('site')} />;
     }
     if (!['admin', 'editor', 'manager'].includes(user.role)) {
-      setView('site');
-      return null;
+      return <LoginPage onSuccess={() => setView('admin')} onBack={() => setView('site')} />;
     }
     return <AdminPage onExit={() => setView('site')} />;
   }

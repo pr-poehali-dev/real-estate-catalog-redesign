@@ -3,8 +3,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import Icon from '@/components/ui/icon';
 import AiChat from '@/components/admin/AiChat';
 
-const IDLE_TIMEOUT_MS = 20 * 60 * 1000;
-const IDLE_WARNING_MS = 60 * 1000;
+const IDLE_TIMEOUT_MS = 2 * 60 * 60 * 1000;
+const IDLE_WARNING_MS = 2 * 60 * 1000;
 
 export type AdminSection = 'dashboard' | 'listings' | 'leads' | 'users' | 'pages' | 'settings' | 'ai-logs';
 
@@ -59,11 +59,16 @@ export default function AdminLayout({ section, setSection, onExit, children }: P
       }, IDLE_TIMEOUT_MS);
     };
 
+    let lastReset = Date.now();
     const onActivity = () => {
-      if (!idleWarning) resetTimers();
+      // Тротлинг: сбрасываем не чаще раза в 5 секунд, чтобы не дёргать таймеры на каждом движении мыши
+      const now = Date.now();
+      if (now - lastReset < 5000) return;
+      lastReset = now;
+      resetTimers();
     };
 
-    const events = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart'];
+    const events = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
     events.forEach(ev => window.addEventListener(ev, onActivity, { passive: true } as AddEventListenerOptions));
     resetTimers();
 
@@ -72,7 +77,7 @@ export default function AdminLayout({ section, setSection, onExit, children }: P
       clearAll();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, idleWarning]);
+  }, [user]);
 
   const stayLoggedIn = () => {
     setIdleWarning(false);
