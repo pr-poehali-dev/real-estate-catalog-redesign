@@ -113,7 +113,14 @@ export default function SettingsAdmin() {
   const loadCities = () => adminApi.listCities().then(d => setCities(d.cities));
 
   useEffect(() => {
-    adminApi.getSettings().then(d => setS(d.settings || {}));
+    adminApi.getSettings().then(d => {
+      const settings = d.settings || {};
+      if (!settings.site_url) {
+        settings.site_url = window.location.origin;
+        adminApi.updateSettings(settings as Record<string, unknown>).catch(() => {});
+      }
+      setS(settings);
+    });
     loadCities();
   }, []);
 
