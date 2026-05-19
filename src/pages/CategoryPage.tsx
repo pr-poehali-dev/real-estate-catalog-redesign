@@ -15,7 +15,6 @@ interface Props {
 }
 
 const CATEGORY_META: Record<string, {
-  label: string;
   labelRu: string;
   icon: string;
   gradient: string;
@@ -24,7 +23,6 @@ const CATEGORY_META: Record<string, {
   features: string[];
 }> = {
   office: {
-    label: 'office',
     labelRu: 'Офисы',
     icon: 'Building2',
     gradient: 'from-blue-500 to-indigo-600',
@@ -33,7 +31,6 @@ const CATEGORY_META: Record<string, {
     features: ['Помещения от 15 до 3000 м²', 'Бизнес-центры класса A, B и C', 'Открытая планировка и кабинетная', 'Инфраструктура: переговорные, кухни, reception'],
   },
   retail: {
-    label: 'retail',
     labelRu: 'Торговые помещения',
     icon: 'ShoppingBag',
     gradient: 'from-orange-500 to-rose-500',
@@ -42,7 +39,6 @@ const CATEGORY_META: Record<string, {
     features: ['1-я и 2-я линия улиц', 'Витринные окна и отдельные входы', 'Высокий пешеходный и автомобильный трафик', 'Помещения с готовым торговым оборудованием'],
   },
   warehouse: {
-    label: 'warehouse',
     labelRu: 'Складские помещения',
     icon: 'Warehouse',
     gradient: 'from-slate-500 to-zinc-700',
@@ -51,7 +47,6 @@ const CATEGORY_META: Record<string, {
     features: ['Стеллажное хранение и ответственное хранение', 'Ворота с пандусом и рампой', 'Отапливаемые и холодильные склады', 'Охраняемая территория и видеонаблюдение'],
   },
   restaurant: {
-    label: 'restaurant',
     labelRu: 'Помещения для общепита',
     icon: 'UtensilsCrossed',
     gradient: 'from-amber-500 to-red-500',
@@ -60,7 +55,6 @@ const CATEGORY_META: Record<string, {
     features: ['Готовые кухни и вентиляция', 'Высокий трафик и парковка', 'Наружная реклама и вывески', 'Помещения с действующим бизнесом'],
   },
   hotel: {
-    label: 'hotel',
     labelRu: 'Гостиницы и мини-отели',
     icon: 'BedDouble',
     gradient: 'from-pink-500 to-fuchsia-600',
@@ -69,7 +63,6 @@ const CATEGORY_META: Record<string, {
     features: ['Готовый гостиничный бизнес', 'Апарт-комплексы и хостелы', 'Объекты с документами и разрешениями', 'Центральные и курортные локации'],
   },
   business: {
-    label: 'business',
     labelRu: 'Готовый бизнес',
     icon: 'Briefcase',
     gradient: 'from-violet-500 to-purple-700',
@@ -78,7 +71,6 @@ const CATEGORY_META: Record<string, {
     features: ['Подтверждённая выручка и прибыль', 'Полный пакет документов', 'Бизнес с историей и репутацией', 'Поддержка при передаче бизнеса'],
   },
   gab: {
-    label: 'gab',
     labelRu: 'ГАБ (готовый арендный бизнес)',
     icon: 'TrendingUp',
     gradient: 'from-emerald-500 to-teal-600',
@@ -87,7 +79,6 @@ const CATEGORY_META: Record<string, {
     features: ['Арендаторы — сетевые федеральные компании', 'Долгосрочные договоры аренды от 3 лет', 'Прозрачная финансовая отчётность', 'Окупаемость 8–12 лет'],
   },
   production: {
-    label: 'production',
     labelRu: 'Производственные помещения',
     icon: 'Factory',
     gradient: 'from-stone-500 to-neutral-700',
@@ -96,7 +87,6 @@ const CATEGORY_META: Record<string, {
     features: ['Потолки от 5 до 15 метров', 'Электроснабжение 3-фаза от 50 кВт', 'Краны-балки и тельферы', 'Промышленные зоны и отдельные въезды'],
   },
   land: {
-    label: 'land',
     labelRu: 'Земельные участки',
     icon: 'Trees',
     gradient: 'from-lime-500 to-green-700',
@@ -105,7 +95,6 @@ const CATEGORY_META: Record<string, {
     features: ['ИЖС, КФХ, промышленные категории', 'Подъезд и коммуникации', 'Участки с проектами застройки', 'Первая линия и трассовые участки'],
   },
   building: {
-    label: 'building',
     labelRu: 'Отдельно стоящие здания',
     icon: 'Landmark',
     gradient: 'from-sky-500 to-blue-700',
@@ -114,7 +103,6 @@ const CATEGORY_META: Record<string, {
     features: ['Собственная парковка и территория', 'Независимая инфраструктура', 'Возможность брендирования фасада', 'Исторические и новые здания'],
   },
   free_purpose: {
-    label: 'free_purpose',
     labelRu: 'Помещения свободного назначения',
     icon: 'Shuffle',
     gradient: 'from-cyan-500 to-teal-700',
@@ -123,7 +111,6 @@ const CATEGORY_META: Record<string, {
     features: ['Без ограничений по виду деятельности', 'Возможна перепланировка', 'На первых и цокольных этажах', 'Оптимальное соотношение цена/качество'],
   },
   car_service: {
-    label: 'car_service',
     labelRu: 'Автосервисы',
     icon: 'Wrench',
     gradient: 'from-zinc-500 to-slate-800',
