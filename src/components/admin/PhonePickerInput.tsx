@@ -83,6 +83,9 @@ export default function PhonePickerInput({ value, onChange, onNameChange, placeh
               onChange={e => {
                 let v = e.target.value;
                 if (!v.startsWith('+7')) v = '+7' + v.replace(/^\+7?/, '');
+                // Ограничение: не более 10 цифр после +7
+                const digits = v.slice(2).replace(/\D/g, '').slice(0, 10);
+                v = '+7' + digits;
                 onChange(v);
                 search(v);
               }}
