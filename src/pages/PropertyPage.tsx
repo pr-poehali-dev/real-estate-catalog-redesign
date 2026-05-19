@@ -6,7 +6,7 @@ import { useSettings } from '@/contexts/SettingsContext';
 import Icon from '@/components/ui/icon';
 import { formatPrice } from '@/components/PropertyCard';
 import Breadcrumbs from '@/components/Breadcrumbs';
-import YandexMap from '@/components/YandexMap';
+import PropertyMapInfrastructure from '@/components/PropertyMapInfrastructure';
 import PropertyCalculators from '@/components/calculators/PropertyCalculators';
 import SimilarListings from '@/components/SimilarListings';
 import PricePredict from '@/components/PricePredict';
@@ -322,19 +322,17 @@ export default function PropertyPage({ onToggleFavorite, onToggleCompare, favori
 
             {(!!item.lat && !!item.lng) && (
               <div className="bg-white rounded-2xl p-5 shadow-sm">
-                <div className="font-display font-700 text-lg mb-3 flex items-center gap-2">
-                  <Icon name="Map" size={18} /> Расположение на карте
+                <div className="font-display font-700 text-lg mb-1 flex items-center gap-2">
+                  <Icon name="Map" size={18} /> Расположение и инфраструктура
                 </div>
-                <YandexMap
-                  points={[{
-                    id: item.id,
-                    lat: item.lat,
-                    lng: item.lng,
-                    title: item.title,
-                    caption: item.address,
-                  }]}
-                  zoom={15}
-                  height="320px"
+                <p className="text-xs text-muted-foreground mb-3">
+                  Выберите категорию — отобразятся ближайшие объекты в радиусе 800 м
+                </p>
+                <PropertyMapInfrastructure
+                  lat={item.lat}
+                  lng={item.lng}
+                  title={item.title}
+                  address={[item.city || 'Краснодар', item.district, item.address].filter(Boolean).join(', ')}
                 />
                 <a
                   href={`https://yandex.ru/maps/?text=${encodeURIComponent(
