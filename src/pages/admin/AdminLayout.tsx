@@ -119,11 +119,11 @@ export default function AdminLayout({ section, setSection, onExit, children }: P
   return (
     <div className="min-h-screen bg-muted/30 flex">
       <aside
-        className={`fixed lg:sticky top-0 left-0 h-screen w-64 bg-white border-r border-border z-40 transition-transform ${
+        className={`fixed lg:sticky top-0 left-0 h-screen w-64 bg-white border-r border-border z-40 flex flex-col transition-transform ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        <div className="p-6 border-b border-border flex items-center justify-between">
+        <div className="p-6 border-b border-border flex items-center justify-between shrink-0">
           <div>
             <div className="font-display font-700 text-xl text-brand-blue">BIZNEST</div>
             <div className="text-xs text-muted-foreground">Админ-панель</div>
@@ -133,7 +133,7 @@ export default function AdminLayout({ section, setSection, onExit, children }: P
           </button>
         </div>
 
-        <nav className="p-3 space-y-1 overflow-y-auto flex-1">
+        <nav className="flex-1 overflow-y-auto p-3 space-y-1">
           {items.filter(n => !n.group).map(item => (
             <button
               key={item.id}
@@ -167,7 +167,7 @@ export default function AdminLayout({ section, setSection, onExit, children }: P
           )}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-border bg-white">
+        <div className="shrink-0 p-3 border-t border-border bg-white">
           <div className="px-3 py-2 mb-2">
             <div className="text-sm font-semibold truncate">{user.name}</div>
             <div className="text-xs text-muted-foreground">{roleLabel[user.role]}</div>
@@ -189,7 +189,7 @@ export default function AdminLayout({ section, setSection, onExit, children }: P
         </div>
       </aside>
 
-      <main className="flex-1 min-w-0">
+      <main className="flex-1 min-w-0 overflow-y-auto h-screen">
         <header className="bg-white border-b border-border px-4 lg:px-8 py-4 flex items-center justify-between sticky top-0 z-30">
           <div className="flex items-center gap-3">
             <button onClick={() => setSidebarOpen(true)} className="lg:hidden">
