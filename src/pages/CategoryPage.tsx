@@ -1,6 +1,6 @@
 import { useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Property } from '@/App';
+import type { Property } from '@/App';
 import PropertyCard from '@/components/PropertyCard';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import Icon from '@/components/ui/icon';
