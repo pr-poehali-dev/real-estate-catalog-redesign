@@ -85,6 +85,7 @@ export default function YandexMap({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [mapReady, setMapReady] = useState(false);
 
   useEffect(() => {
     const apiKey = settings.yandex_maps_api_key || '';
@@ -118,6 +119,7 @@ export default function YandexMap({
             zoom,
             controls: ['zoomControl', 'fullscreenControl', 'geolocationControl'],
           });
+          setMapReady(true);
           // Проверяем через 2 секунды — не вылетела ли ошибка от Яндекса
           setTimeout(() => {
             if (!cancelled && ymapsErrorMsg) {
@@ -150,7 +152,7 @@ export default function YandexMap({
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !window.ymaps) return;
+    if (!map || !window.ymaps || !mapReady) return;
     map.geoObjects.removeAll();
 
     const valid = points
@@ -190,7 +192,7 @@ export default function YandexMap({
     } else if (center) {
       map.setCenter(center, zoom);
     }
-  }, [points, center, zoom, onPointClick]);
+  }, [points, center, zoom, onPointClick, mapReady]);
 
   useEffect(() => {
     const ref = mapRef;
@@ -202,6 +204,7 @@ export default function YandexMap({
           // ignore destroy errors
         }
         ref.current = null;
+        setMapReady(false);
       }
     };
   }, []);
