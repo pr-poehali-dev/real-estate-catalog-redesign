@@ -4,7 +4,18 @@ import { useSettings } from '@/contexts/SettingsContext';
 import Icon from '@/components/ui/icon';
 import { Listing, City, FINISHING, ROAD_LINES, detectVideoType } from './types';
 
-const UTILITIES_OPTIONS = ['Вода', 'Канализация', 'Отопление', 'Газ', 'Интернет'];
+const UTILITIES_MAP: { key: string; label: string; options: string[] }[] = [
+  { key: 'Вода', label: '💧 Вода', options: ['Центральная', 'Скважина', 'Колодец', 'Привозная'] },
+  { key: 'Канализация', label: '🚿 Канализация', options: ['Центральная', 'Септик', 'Выгребная яма', 'Ливневая'] },
+  { key: 'Отопление', label: '🔥 Отопление', options: ['Центральное', 'Газовое', 'Электрическое', 'Автономное', 'Печное', 'Тепловой насос'] },
+  { key: 'Газ', label: '🔵 Газ', options: ['Магистральный', 'Баллонный', 'Отсутствует'] },
+  { key: 'Электричество', label: '⚡ Электричество', options: ['220В', '380В (3 фазы)', 'Генератор', 'Солнечные панели'] },
+  { key: 'Интернет', label: '🌐 Интернет', options: ['Оптоволокно', 'Wi-Fi', 'Кабельный', '4G/5G'] },
+  { key: 'Вентиляция', label: '💨 Вентиляция', options: ['Приточно-вытяжная', 'Принудительная', 'Естественная'] },
+  { key: 'Кондиционирование', label: '❄️ Кондиционирование', options: ['Сплит-система', 'Центральное', 'Чиллер', 'Отсутствует'] },
+  { key: 'Пожарная сигнализация', label: '🚒 Пожарная сигнализация', options: ['Есть', 'Отсутствует'] },
+  { key: 'Видеонаблюдение', label: '📷 Видеонаблюдение', options: ['Есть', 'Отсутствует'] },
+];
 
 /* ── Яндекс.Карты типы ── */
 declare global {
@@ -294,21 +305,31 @@ export default function ListingEditorDetailsSection({ editing, setEditing, citie
               onChange={e => setEditing({ ...editing, electricity_kw: e.target.value === '' ? null : +e.target.value })} />
           </div>
           <div className="sm:col-span-3">
-            <label className="text-xs text-muted-foreground block mb-1.5">Коммуникации</label>
-            <div className="flex flex-wrap gap-3">
-              {UTILITIES_OPTIONS.map(opt => {
+            <label className="text-xs text-muted-foreground block mb-2">Коммуникации</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {UTILITIES_MAP.map(({ key, label, options }) => {
                 const list = (editing.utilities || '').split(',').map(s => s.trim()).filter(Boolean);
-                const checked = list.includes(opt);
+                const current = list.find(v => v.startsWith(key + ':'));
+                const selected = current ? current.split(':')[1]?.trim() : '';
+
+                const handleChange = (val: string) => {
+                  const without = list.filter(v => !v.startsWith(key + ':'));
+                  const next = val ? [...without, `${key}: ${val}`] : without;
+                  setEditing({ ...editing, utilities: next.join(', ') });
+                };
+
                 return (
-                  <label key={opt} className="flex items-center gap-1.5 text-sm cursor-pointer">
-                    <input type="checkbox" checked={checked} onChange={e => {
-                      const next = e.target.checked
-                        ? [...list, opt]
-                        : list.filter(v => v !== opt);
-                      setEditing({ ...editing, utilities: next.join(', ') });
-                    }} />
-                    {opt}
-                  </label>
+                  <div key={key} className="flex items-center gap-2 bg-muted/40 rounded-lg px-3 py-2">
+                    <span className="text-xs font-medium min-w-[120px]">{label}</span>
+                    <select
+                      value={selected}
+                      onChange={e => handleChange(e.target.value)}
+                      className="flex-1 text-xs px-2 py-1 border border-border rounded-md bg-white outline-none"
+                    >
+                      <option value="">— Не указано —</option>
+                      {options.map(o => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                  </div>
                 );
               })}
             </div>
