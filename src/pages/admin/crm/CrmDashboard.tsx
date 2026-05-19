@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import Icon from '@/components/ui/icon';
 import { CRM_URL } from '@/lib/adminApi';
+import CrmCalendar from './CrmCalendar';
 
 const MEDALS = ['🥇', '🥈', '🥉'];
 
@@ -111,6 +112,8 @@ export default function CrmDashboard() {
           )}
         </div>
       </div>
+
+      <CrmCalendar />
     </div>
   );
 }
