@@ -53,7 +53,7 @@ export default function CrmOwners() {
     },
   });
 
-  const { data: ownerDetail, isLoading: detailLoading } = useQuery({
+  const { data: _ownerDetail, isLoading: _detailLoading } = useQuery({
     queryKey: ['crm-owner', selectedOwner?.id],
     queryFn: async () => {
       const r = await fetch(`${CRM_URL}/owners/${selectedOwner!.id}`, { headers });

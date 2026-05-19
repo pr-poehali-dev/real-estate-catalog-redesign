@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Property } from '@/App';
 import PropertyCard from '@/components/PropertyCard';
@@ -127,6 +127,17 @@ export default function CategoryPage({ properties, favorites, compareList, onTog
   const city = settings.main_city || 'Краснодар';
 
   const meta = type ? CATEGORY_META[type] : null;
+
+  useEffect(() => {
+    if (meta) {
+      document.title = `${meta.h1} | ${settings.company_name || 'BIZNEST'}`;
+      const desc = document.querySelector('meta[name="description"]');
+      if (desc) desc.setAttribute('content', meta.description);
+    }
+    return () => {
+      document.title = settings.company_name || 'BIZNEST';
+    };
+  }, [meta, settings.company_name]);
 
   const items = useMemo(() => {
     if (!type) return [];
