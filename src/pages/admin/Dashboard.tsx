@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { adminApi } from '@/lib/adminApi';
 import Icon from '@/components/ui/icon';
 import CrmDashboard from './crm/CrmDashboard';
+import CrmCalendar from './crm/CrmCalendar';
 
 interface Stats {
   listings_active: number;
@@ -51,8 +52,6 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <CrmDashboard />
-
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map(c => (
           <div
@@ -96,6 +95,9 @@ export default function Dashboard() {
         </div>
       </div>
 
+      <CrmCalendar />
+
+      <CrmDashboard />
     </div>
   );
 }
