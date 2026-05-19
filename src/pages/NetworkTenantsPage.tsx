@@ -53,9 +53,9 @@ export default function NetworkTenantsPage() {
     <div className="min-h-screen bg-background">
       <section className="bg-gradient-to-r from-brand-blue to-brand-blue-dark text-white py-14">
         <div className="container mx-auto px-4">
-          <h1 className="font-display font-900 text-3xl md:text-5xl mb-3">Сетевые арендаторы</h1>
+          <h1 className="font-display font-900 text-3xl md:text-5xl mb-3">Заявки на аренду/продажу</h1>
           <p className="text-white/80 max-w-2xl">
-            Федеральные и региональные сети, готовые арендовать ваши помещения.
+            Федеральные, региональные сети, местные компании и частные лица, готовые арендовать ваши помещения.
             Подходящий объект — отправьте предложение в один клик.
           </p>
         </div>
