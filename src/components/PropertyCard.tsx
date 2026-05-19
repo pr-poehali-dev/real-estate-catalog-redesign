@@ -201,6 +201,12 @@ export default function PropertyCard({
             {property.isNew && (
               <span className="text-[10px] font-bold font-display px-2 py-0.5 rounded-full bg-emerald-500 text-white shadow-sm">Новое</span>
             )}
+            {property.isExclusive && (
+              <span className="text-[10px] font-bold font-display px-2 py-0.5 rounded-full bg-amber-500 text-white shadow-sm">⭐ Эксклюзив</span>
+            )}
+            {property.isUrgent && (
+              <span className="text-[10px] font-bold font-display px-2 py-0.5 rounded-full bg-red-600 text-white shadow-sm">⚡ Срочно</span>
+            )}
           </div>
 
 

@@ -47,6 +47,10 @@ export interface Listing {
   payback?: number | null;
   profit?: number | null;
   price_per_m2?: number | null;
+  is_exclusive?: boolean;
+  is_urgent?: boolean;
+  lat?: number | null;
+  lng?: number | null;
 }
 
 export interface City { id: number; name: string; is_active: boolean }
@@ -73,7 +77,7 @@ export const DEALS: [string, string, string][] = [
 ];
 export const CONDITIONS = [
   ['new', 'Новое'], ['euro', 'Евроремонт'], ['good', 'Хорошее'],
-  ['cosmetic', 'Требуется косметика'], ['rough', 'Без отделки'], ['shellcore', 'Shell&Core'],
+  ['cosmetic', 'Требуется косметика'], ['rough', 'Без отделки'], ['shellcore', 'Черновая отделка (Shell&Core)'],
 ];
 export const PARKING = [['none', 'Нет'], ['street', 'На улице'], ['building', 'В здании']];
 export const ENTRANCE = [['street', 'С улицы'], ['yard', 'Со двора']];
@@ -81,7 +85,7 @@ export const ENTRANCE = [['street', 'С улицы'], ['yard', 'Со двора'
 export const FINISHING = [
   ['none', 'Без отделки'],
   ['rough', 'Черновая'],
-  ['preFinish', 'Предчистовая'],
+  ['pre_finish', 'Предчистовая'],
   ['cosmetic', 'Косметический ремонт'],
   ['euro', 'Евроремонт'],
   ['designer', 'Дизайнерский ремонт'],
@@ -106,6 +110,7 @@ export const empty: Partial<Listing> = {
   tenant_name: '', monthly_rent: null, yearly_rent: null,
   finishing: '', ceiling_height: null, electricity_kw: null,
   utilities: '', road_line: '', payback: null, profit: null,
+  is_exclusive: false, is_urgent: false,
 };
 
 export const fmtDate = (s: string | null) => {

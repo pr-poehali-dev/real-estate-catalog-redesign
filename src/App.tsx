@@ -42,6 +42,8 @@ export interface Property {
   lng: number;
   isHot?: boolean;
   isNew?: boolean;
+  isExclusive?: boolean;
+  isUrgent?: boolean;
   publicCode?: number;
   tenantName?: string;
   monthlyRent?: number;

@@ -1,5 +1,6 @@
 import ImageUploader from '@/components/admin/ImageUploader';
 import Icon from '@/components/ui/icon';
+import PhonePickerInput from '@/components/admin/PhonePickerInput';
 import {
   Listing, City, Purpose,
   CATS, DEALS, CONDITIONS,
@@ -58,6 +59,7 @@ export default function ListingEditor({
         </div>
 
         <div className="p-5 space-y-4">
+          {/* 1. Название */}
           <div className="relative">
             <input className="w-full px-3 py-2 border rounded-lg pr-16" placeholder="Название"
               maxLength={60}
@@ -70,7 +72,26 @@ export default function ListingEditor({
             </span>
           </div>
 
-          <div>
+          {/* 2. Собственник */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-border pt-4">
+            <div>
+              <label className="text-xs text-muted-foreground">Имя собственника</label>
+              <input className="w-full px-3 py-2 border rounded-lg"
+                value={editing.owner_name || ''}
+                onChange={e => setEditing({ ...editing, owner_name: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">Телефон собственника</label>
+              <PhonePickerInput
+                value={editing.owner_phone || ''}
+                onChange={(phone, name) => setEditing({ ...editing, owner_phone: phone, ...(name && !editing.owner_name ? { owner_name: name } : {}) })}
+                onNameChange={name => { if (!editing.owner_name) setEditing({ ...editing, owner_name: name }); }}
+              />
+            </div>
+          </div>
+
+          {/* 3. Фотографии */}
+          <div className="border-t border-border pt-4">
             <label className="text-sm font-semibold block mb-1">Фотографии</label>
             <ImageUploader value={photos} onChange={setPhotos} folder="photos" multiple />
           </div>

@@ -24,6 +24,8 @@ interface ApiListing {
   tags: string[];
   is_hot: boolean;
   is_new: boolean;
+  is_exclusive?: boolean;
+  is_urgent?: boolean;
   public_code?: number | null;
   tenant_name?: string | null;
   monthly_rent?: number | null;
@@ -64,6 +66,8 @@ function mapListing(item: ApiListing): Property {
     lng: toNum(item.lng),
     isHot: item.is_hot,
     isNew: item.is_new,
+    isExclusive: item.is_exclusive,
+    isUrgent: item.is_urgent,
     publicCode: item.public_code ?? undefined,
     tenantName: item.tenant_name ?? undefined,
     monthlyRent: item.monthly_rent ?? undefined,

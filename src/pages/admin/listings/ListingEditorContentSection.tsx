@@ -58,14 +58,25 @@ export default function ListingEditorContentSection({
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={!!editing.is_hot}
               onChange={e => setEditing({ ...editing, is_hot: e.target.checked })} />
-            Горячее
+            🔥 Горячее
           </label>
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={!!editing.is_new}
               onChange={e => setEditing({ ...editing, is_new: e.target.checked })} />
             Новинка
           </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={!!editing.is_exclusive}
+              onChange={e => setEditing({ ...editing, is_exclusive: e.target.checked })} />
+            ⭐ Эксклюзив
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={!!editing.is_urgent}
+              onChange={e => setEditing({ ...editing, is_urgent: e.target.checked })} />
+            ⚡ Срочно
+          </label>
         </div>
+        <div className="text-xs text-muted-foreground">Эксклюзив и Срочно отображаются бейджами на фото в каталоге.</div>
         <div className="text-xs text-muted-foreground pt-2">Выгрузка в XML фиды:</div>
         <div className="flex flex-wrap gap-4">
           <label className="flex items-center gap-2 text-sm">

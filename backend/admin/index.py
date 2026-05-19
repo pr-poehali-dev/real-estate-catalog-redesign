@@ -174,7 +174,7 @@ def _listings(cur, conn, method, rid, event, user):
     if method == 'POST':
         sql = (
             f"INSERT INTO {SCHEMA}.listings "
-            f"(title, description, category, deal, price, price_per_m2, area, payback, profit, floor, total_floors, address, district, city, lat, lng, image, images, tags, is_hot, is_new, status, owner_name, owner_phone, price_unit, purpose, condition, parking, entrance, video_url, video_type, use_watermark, export_yandex, export_avito, export_cian, tenant_name, monthly_rent, yearly_rent, finishing, ceiling_height, electricity_kw, utilities, road_line, author_id) VALUES ("
+            f"(title, description, category, deal, price, price_per_m2, area, payback, profit, floor, total_floors, address, district, city, lat, lng, image, images, tags, is_hot, is_new, is_exclusive, is_urgent, status, owner_name, owner_phone, price_unit, purpose, condition, parking, entrance, video_url, video_type, use_watermark, export_yandex, export_avito, export_cian, tenant_name, monthly_rent, yearly_rent, finishing, ceiling_height, electricity_kw, utilities, road_line, author_id) VALUES ("
             f"{_str_or_null(body.get('title'), 255)}, {_str_or_null(body.get('description'), 5000)}, "
             f"{_str_or_null(body.get('category'), 50)}, {_str_or_null(body.get('deal'), 20)}, "
             f"{_int_or_null(body.get('price'))}, {_int_or_null(body.get('price_per_m2'))}, "
@@ -186,7 +186,8 @@ def _listings(cur, conn, method, rid, event, user):
             f"{_int_or_null(body.get('lng'))}, {_str_or_null(body.get('image'), 500)}, "
             f"{_str_or_null(body.get('images'), 5000)}, "
             f"{_str_or_null(body.get('tags'), 1000)}, {_bool(body.get('is_hot'))}, "
-            f"{_bool(body.get('is_new'))}, {_str_or_null(body.get('status') or 'active', 20)}, "
+            f"{_bool(body.get('is_new'))}, {_bool(body.get('is_exclusive'))}, {_bool(body.get('is_urgent'))}, "
+            f"{_str_or_null(body.get('status') or 'active', 20)}, "
             f"{_str_or_null(body.get('owner_name'), 150)}, {_str_or_null(body.get('owner_phone'), 30)}, "
             f"{_str_or_null(body.get('price_unit') or 'total', 10)}, "
             f"{_str_or_null(body.get('purpose'), 100)}, {_str_or_null(body.get('condition'), 50)}, "
@@ -230,7 +231,7 @@ def _listings(cur, conn, method, rid, event, user):
             if f in body:
                 v = body.get(f)
                 fields.append(f"{f} = " + ('NULL' if v is None or v == '' else str(float(v))))
-        for f in ('is_hot', 'is_new'):
+        for f in ('is_hot', 'is_new', 'is_exclusive', 'is_urgent'):
             if f in body:
                 fields.append(f"{f} = {_bool(body.get(f))}")
         if not fields:

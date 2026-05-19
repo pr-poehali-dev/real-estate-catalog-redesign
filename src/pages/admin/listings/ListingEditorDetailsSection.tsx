@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef, useState } from 'react';
-import PhonePickerInput from '@/components/admin/PhonePickerInput';
 import { useSettings } from '@/contexts/SettingsContext';
 import Icon from '@/components/ui/icon';
 import { Listing, City, FINISHING, ROAD_LINES, detectVideoType } from './types';
+
+const UTILITIES_OPTIONS = ['Вода', 'Канализация', 'Отопление', 'Газ', 'Интернет'];
 
 /* ── Яндекс.Карты типы ── */
 declare global {
@@ -292,12 +293,25 @@ export default function ListingEditorDetailsSection({ editing, setEditing, citie
               value={editing.electricity_kw ?? ''}
               onChange={e => setEditing({ ...editing, electricity_kw: e.target.value === '' ? null : +e.target.value })} />
           </div>
-          <div className="sm:col-span-2">
-            <label className="text-xs text-muted-foreground">Коммуникации</label>
-            <input className="w-full px-3 py-2 border rounded-lg"
-              placeholder="вода, канализация, отопление, газ, интернет..."
-              value={editing.utilities || ''}
-              onChange={e => setEditing({ ...editing, utilities: e.target.value })} />
+          <div className="sm:col-span-3">
+            <label className="text-xs text-muted-foreground block mb-1.5">Коммуникации</label>
+            <div className="flex flex-wrap gap-3">
+              {UTILITIES_OPTIONS.map(opt => {
+                const list = (editing.utilities || '').split(',').map(s => s.trim()).filter(Boolean);
+                const checked = list.includes(opt);
+                return (
+                  <label key={opt} className="flex items-center gap-1.5 text-sm cursor-pointer">
+                    <input type="checkbox" checked={checked} onChange={e => {
+                      const next = e.target.checked
+                        ? [...list, opt]
+                        : list.filter(v => v !== opt);
+                      setEditing({ ...editing, utilities: next.join(', ') });
+                    }} />
+                    {opt}
+                  </label>
+                );
+              })}
+            </div>
           </div>
           <div>
             <label className="text-xs text-muted-foreground">Линия расположения</label>
@@ -360,22 +374,6 @@ export default function ListingEditorDetailsSection({ editing, setEditing, citie
       </div>
 
       <AddressWithMap editing={editing} setEditing={setEditing} cities={cities} />
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-border pt-4">
-        <div>
-          <label className="text-xs text-muted-foreground">Имя собственника</label>
-          <input className="w-full px-3 py-2 border rounded-lg"
-            value={editing.owner_name || ''} onChange={e => setEditing({ ...editing, owner_name: e.target.value })} />
-        </div>
-        <div>
-          <label className="text-xs text-muted-foreground">Телефон собственника</label>
-          <PhonePickerInput
-            value={editing.owner_phone || ''}
-            onChange={(phone, name) => setEditing({ ...editing, owner_phone: phone, ...(name && !editing.owner_name ? { owner_name: name } : {}) })}
-            onNameChange={name => { if (!editing.owner_name) setEditing({ ...editing, owner_name: name }); }}
-          />
-        </div>
-      </div>
 
       <div>
         <label className="text-xs text-muted-foreground">Видео (VK Видео или RuTube URL)</label>
