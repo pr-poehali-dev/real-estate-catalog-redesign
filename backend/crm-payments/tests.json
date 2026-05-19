@@ -11,6 +11,13 @@
       "method": "GET",
       "path": "/",
       "expectedStatus": 403
+    },
+    {
+      "name": "Webhook empty body",
+      "method": "POST",
+      "path": "/?action=webhook",
+      "body": {},
+      "expectedStatus": 200
     }
   ]
 }
