@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { adminApi } from '@/lib/adminApi';
 import Icon from '@/components/ui/icon';
+import PhoneCardModal from '@/components/admin/PhoneCardModal';
 
 interface PhoneContact {
   id: number;
@@ -10,6 +11,8 @@ interface PhoneContact {
   company: string | null;
   notes: string | null;
   tags: string | null;
+  inn: string | null;
+  photo_url: string | null;
   created_at: string;
   updated_at: string;
   listings_count?: number;
@@ -18,172 +21,8 @@ interface PhoneContact {
   linked_leads?: { id: number; name: string; status: string; created_at: string }[] | null;
 }
 
-interface DetailPanelProps {
-  contact: PhoneContact;
-  onClose: () => void;
-  onUpdate: () => void;
-}
-
 function fmtDate(s: string) {
   return new Date(s).toLocaleDateString('ru', { day: '2-digit', month: '2-digit', year: '2-digit' });
-}
-
-const LEAD_STATUS_LABELS: Record<string, string> = {
-  new: 'Новый', in_progress: 'В работе', done: 'Закрыт', rejected: 'Отказ',
-};
-const LISTING_ROLE_LABELS: Record<string, string> = {
-  owner: 'Собственник', agent: 'Агент', tenant: 'Арендатор',
-};
-
-function DetailPanel({ contact, onClose, onUpdate }: DetailPanelProps) {
-  const [full, setFull] = useState<PhoneContact | null>(null);
-  const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ name: contact.name || '', company: contact.company || '', notes: contact.notes || '', tags: contact.tags || '' });
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    adminApi.getPhone(contact.id).then(r => setFull(r.contact));
-  }, [contact.id]);
-
-  const save = async () => {
-    setSaving(true);
-    try {
-      await adminApi.updatePhone(contact.id, form);
-      setEditing(false);
-      onUpdate();
-      adminApi.getPhone(contact.id).then(r => setFull(r.contact));
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const unlink = async (type: 'listing' | 'lead', id: number) => {
-    if (type === 'listing') await adminApi.unlinkPhone(contact.id, { listing_id: id });
-    else await adminApi.unlinkPhone(contact.id, { lead_id: id });
-    adminApi.getPhone(contact.id).then(r => setFull(r.contact));
-    onUpdate();
-  };
-
-  const data = full || contact;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-2xl">
-        <div className="flex items-start justify-between px-5 py-4 border-b border-border">
-          <div>
-            <div className="font-display font-700 text-base">{data.phone}</div>
-            {data.name && <div className="text-sm text-muted-foreground">{data.name}</div>}
-          </div>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-muted ml-2">
-            <Icon name="X" size={18} />
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {editing ? (
-            <div className="space-y-3">
-              {[['name', 'Имя'], ['company', 'Компания'], ['tags', 'Теги']].map(([k, l]) => (
-                <div key={k}>
-                  <label className="text-xs font-semibold text-muted-foreground mb-1 block">{l}</label>
-                  <input
-                    className="w-full border border-border rounded-lg px-3 py-2 text-sm"
-                    value={(form as Record<string, string>)[k]}
-                    onChange={e => setForm({ ...form, [k]: e.target.value })}
-                  />
-                </div>
-              ))}
-              <div>
-                <label className="text-xs font-semibold text-muted-foreground mb-1 block">Заметки</label>
-                <textarea
-                  className="w-full border border-border rounded-lg px-3 py-2 text-sm resize-none"
-                  rows={3}
-                  value={form.notes}
-                  onChange={e => setForm({ ...form, notes: e.target.value })}
-                />
-              </div>
-              <div className="flex gap-2">
-                <button onClick={save} disabled={saving}
-                  className="btn-blue text-white px-4 py-2 rounded-lg text-sm font-semibold">
-                  {saving ? 'Сохранение...' : 'Сохранить'}
-                </button>
-                <button onClick={() => setEditing(false)}
-                  className="px-4 py-2 rounded-lg text-sm border border-border hover:bg-muted">
-                  Отмена
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-1 text-sm">
-              {data.name && <div><span className="text-muted-foreground">Имя:</span> {data.name}</div>}
-              {data.company && <div><span className="text-muted-foreground">Компания:</span> {data.company}</div>}
-              {data.tags && <div><span className="text-muted-foreground">Теги:</span> {data.tags}</div>}
-              {data.notes && <div><span className="text-muted-foreground">Заметки:</span> {data.notes}</div>}
-              <div className="text-xs text-muted-foreground">Добавлен {fmtDate(data.created_at)}</div>
-              <button onClick={() => setEditing(true)}
-                className="text-brand-blue text-xs font-semibold hover:underline mt-1">
-                Редактировать
-              </button>
-            </div>
-          )}
-
-          <div>
-            <div className="text-sm font-semibold mb-2 flex items-center gap-2">
-              <Icon name="Building2" size={15} />
-              Объекты ({data.linked_listings?.length || 0})
-            </div>
-            {data.linked_listings && data.linked_listings.length > 0 ? (
-              <div className="space-y-2">
-                {data.linked_listings.map(l => (
-                  <div key={l.id} className="flex items-center gap-2 p-2 rounded-lg bg-muted/30">
-                    {l.image && <img src={l.image} alt="" className="w-10 h-10 rounded object-cover flex-shrink-0" />}
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">{l.title}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {LISTING_ROLE_LABELS[l.role] || l.role} · {l.status === 'active' ? 'Активен' : 'Архив'}
-                      </div>
-                    </div>
-                    <button onClick={() => unlink('listing', l.id)}
-                      className="text-red-500 hover:text-red-700 p-1 flex-shrink-0">
-                      <Icon name="Unlink" size={14} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-xs text-muted-foreground">Не привязан ни к одному объекту</div>
-            )}
-          </div>
-
-          <div>
-            <div className="text-sm font-semibold mb-2 flex items-center gap-2">
-              <Icon name="Inbox" size={15} />
-              Лиды ({data.linked_leads?.length || 0})
-            </div>
-            {data.linked_leads && data.linked_leads.length > 0 ? (
-              <div className="space-y-2">
-                {data.linked_leads.map(l => (
-                  <div key={l.id} className="flex items-center gap-2 p-2 rounded-lg bg-muted/30">
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium">{l.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {LEAD_STATUS_LABELS[l.status] || l.status} · {fmtDate(l.created_at)}
-                      </div>
-                    </div>
-                    <button onClick={() => unlink('lead', l.id)}
-                      className="text-red-500 hover:text-red-700 p-1 flex-shrink-0">
-                      <Icon name="Unlink" size={14} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-xs text-muted-foreground">Нет привязанных лидов</div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 function AddContactModal({ onClose, onAdded }: { onClose: () => void; onAdded: () => void }) {
@@ -251,7 +90,7 @@ export default function PhoneBook() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
-  const [selected, setSelected] = useState<PhoneContact | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
   const [adding, setAdding] = useState(false);
 
   const load = useCallback((p = 1, q = '') => {
@@ -318,23 +157,36 @@ export default function PhoneBook() {
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-left">
               <tr>
+                <th className="px-4 py-3 w-10"></th>
                 <th className="px-4 py-3">Телефон</th>
                 <th className="px-4 py-3">Имя / Компания</th>
+                <th className="px-4 py-3 hidden sm:table-cell">ИНН</th>
                 <th className="px-4 py-3 text-center">Объекты</th>
                 <th className="px-4 py-3 text-center">Лиды</th>
-                <th className="px-4 py-3">Добавлен</th>
+                <th className="px-4 py-3 hidden md:table-cell">Добавлен</th>
               </tr>
             </thead>
             <tbody>
               {contacts.map(c => (
                 <tr key={c.id}
-                  onClick={() => setSelected(c)}
+                  onClick={() => setSelectedId(c.id)}
                   className="border-t border-border hover:bg-muted/30 cursor-pointer">
+                  <td className="px-3 py-2">
+                    {c.photo_url
+                      ? <img src={c.photo_url} alt="" className="w-8 h-8 rounded-full object-cover" />
+                      : <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                          <Icon name="User" size={14} className="text-muted-foreground" />
+                        </div>
+                    }
+                  </td>
                   <td className="px-4 py-3 font-mono font-semibold text-brand-blue">{c.phone}</td>
                   <td className="px-4 py-3">
                     {c.name && <div>{c.name}</div>}
                     {c.company && <div className="text-xs text-muted-foreground">{c.company}</div>}
                     {!c.name && !c.company && <span className="text-muted-foreground">—</span>}
+                  </td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground hidden sm:table-cell">
+                    {c.inn || '—'}
                   </td>
                   <td className="px-4 py-3 text-center">
                     {(c.listings_count || 0) > 0
@@ -346,7 +198,7 @@ export default function PhoneBook() {
                       ? <span className="bg-brand-orange/10 text-brand-orange text-xs font-semibold px-2 py-0.5 rounded-full">{c.leads_count}</span>
                       : <span className="text-muted-foreground">—</span>}
                   </td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">{fmtDate(c.created_at)}</td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground hidden md:table-cell">{fmtDate(c.created_at)}</td>
                 </tr>
               ))}
             </tbody>
@@ -368,10 +220,10 @@ export default function PhoneBook() {
         </div>
       )}
 
-      {selected && (
-        <DetailPanel
-          contact={selected}
-          onClose={() => setSelected(null)}
+      {selectedId !== null && (
+        <PhoneCardModal
+          contactId={selectedId}
+          onClose={() => setSelectedId(null)}
           onUpdate={() => load(page, search)}
         />
       )}
