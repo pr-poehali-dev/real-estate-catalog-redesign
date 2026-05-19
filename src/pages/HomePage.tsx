@@ -208,8 +208,8 @@ export default function HomePage({ properties, favorites, compareList, onToggleF
         </div>
       </section>
 
-      {/* Categories — компактнее */}
-      <section className="py-6 bg-background">
+      {/* Categories — скрыты */}
+      <section className="py-6 bg-background hidden">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-2 md:gap-3">
             {CATEGORIES.map((cat, i) => (

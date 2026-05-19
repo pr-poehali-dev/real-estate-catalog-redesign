@@ -50,7 +50,7 @@ export default function CrmPayments() {
     },
   });
 
-  const { data: listingsData } = useQuery<{ id: number; title: string; address?: string; price?: number }[]>({
+  const { data: listings = [] } = useQuery<{ id: number; title: string; address?: string; price?: number }[]>({
     queryKey: ['listings-for-payments'],
     queryFn: async () => {
       const d = await adminApi.listListings();
@@ -60,7 +60,6 @@ export default function CrmPayments() {
     },
     staleTime: 60_000,
   });
-  const listings = listingsData || [];
 
   const createMutation = useMutation({
     mutationFn: async (f: CreateForm) => {
