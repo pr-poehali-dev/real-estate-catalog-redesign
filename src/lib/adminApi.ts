@@ -157,6 +157,7 @@ export const adminApi = {
     req(`${ADMIN_URL}?resource=phones&id=${id}&action=link`, { method: 'POST', body: JSON.stringify(data) }),
   unlinkPhone: (id: number, data: { listing_id?: number; lead_id?: number }) =>
     req(`${ADMIN_URL}?resource=phones&id=${id}&action=unlink`, { method: 'POST', body: JSON.stringify(data) }),
+  getPhoneHistory: (id: number) => req(`${ADMIN_URL}?resource=phones&id=${id}&action=history`),
 };
 
 export async function uploadFile(file: File, folder: 'photos' | 'logo' | 'watermark' = 'photos'): Promise<string> {

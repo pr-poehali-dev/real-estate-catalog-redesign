@@ -757,6 +757,21 @@ def _phones(cur, conn, method, rid, action, event, user):
             rows = [_ser_phone(dict(r)) for r in cur.fetchall()]
             return _ok({'contacts': rows})
 
+        if rid and action == 'history':
+            cur.execute(
+                f"SELECT pch.*, u.name AS changed_by_name "
+                f"FROM {SCHEMA}.phone_contact_history pch "
+                f"LEFT JOIN {SCHEMA}.users u ON u.id = pch.changed_by "
+                f"WHERE pch.phone_contact_id = {int(rid)} "
+                f"ORDER BY pch.changed_at DESC LIMIT 100"
+            )
+            rows = []
+            for r in cur.fetchall():
+                d = dict(r)
+                d['changed_at'] = d['changed_at'].isoformat() if d.get('changed_at') else None
+                rows.append(d)
+            return _ok({'history': rows})
+
         if rid:
             cur.execute(
                 f"SELECT pc.*, "
@@ -855,8 +870,17 @@ def _phones(cur, conn, method, rid, action, event, user):
         return _ok({'id': new_id, 'success': True})
 
     if method == 'PUT' and rid:
+        cid = int(rid)
+        # fetch current values for history
+        cur.execute(f"SELECT * FROM {SCHEMA}.phone_contacts WHERE id = {cid}")
+        old_row = cur.fetchone()
+        if not old_row:
+            return _err(404, 'Не найдено')
+        old_data = dict(old_row)
+
         fields = []
-        for f, length in [('name', 200), ('company', 200), ('notes', 2000), ('tags', 500)]:
+        tracked = [('name', 200), ('company', 200), ('notes', 2000), ('tags', 500), ('inn', 12), ('photo_url', 500)]
+        for f, length in tracked:
             if f in body:
                 fields.append(f"{f} = {_str_or_null(body[f], length)}")
         if 'phone' in body:
@@ -867,7 +891,24 @@ def _phones(cur, conn, method, rid, action, event, user):
         if not fields:
             return _err(400, 'Нет полей')
         fields.append("updated_at = NOW()")
-        cur.execute(f"UPDATE {SCHEMA}.phone_contacts SET {', '.join(fields)} WHERE id = {int(rid)}")
+        cur.execute(f"UPDATE {SCHEMA}.phone_contacts SET {', '.join(fields)} WHERE id = {cid}")
+
+        # write history for changed fields
+        history_fields = [f for f, _ in tracked] + ['phone']
+        for hf in history_fields:
+            if hf not in body:
+                continue
+            old_val = str(old_data.get(hf) or '')
+            new_val = _safe(str(body.get(hf) or ''), 500)
+            if old_val != new_val:
+                old_esc = old_val.replace("'", "''")
+                new_esc = new_val.replace("'", "''")
+                cur.execute(
+                    f"INSERT INTO {SCHEMA}.phone_contact_history "
+                    f"(phone_contact_id, changed_by, field_name, old_value, new_value) "
+                    f"VALUES ({cid}, {user['id']}, '{hf}', '{old_esc}', '{new_esc}')"
+                )
+
         conn.commit()
         return _ok({'success': True})
 
