@@ -51,6 +51,8 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
+      <CrmDashboard />
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map(c => (
           <div
@@ -94,7 +96,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <CrmDashboard />
     </div>
   );
 }
